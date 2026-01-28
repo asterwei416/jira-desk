@@ -1,50 +1,159 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+同步影響報告 (Sync Impact Report):
+版本變更 (Version Change): Initial → 1.0.0 → 1.1.0
+理由 (Reason): 添加繁體中文文檔要求並將憲法翻譯為繁體中文
+修改的原則 (Modified Principles): 新增「V. 文檔語言標準」原則
+新增區段 (Added Sections): 繁體中文文檔要求
+移除區段 (Removed Sections): None
+模板狀態 (Templates Status):
+  ✅ plan-template.md - 憲法檢查區段相容
+  ✅ spec-template.md - 需求對齊已驗證,需使用繁體中文
+  ✅ tasks-template.md - 測試優先工作流程支援,需使用繁體中文
+後續待辦事項 (Follow-up TODOs): 所有面向用戶的模板和文檔須更新為繁體中文
+-->
 
-## Core Principles
+# 需求紀錄與問題分析系統憲法
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## 核心原則
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### I. 程式碼品質標準 (不可妥協)
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+所有程式碼在合併前必須符合以下品質標準:
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+- **可讀性優先**: 程式碼必須具備自我說明性,使用清晰的命名慣例;複雜邏輯必須包含行內註解說明「為什麼」
+- **單一職責原則**: 每個函式、類別或模組必須有一個明確目的;超過 50 行的函式需要提供說明理由
+- **DRY 原則**: 超過 3 行的重複程式碼必須重構為可重用的函式或模組
+- **型別安全**: 所有函式必須具備明確的型別註解(Python type hints、TypeScript types 等);除非有文檔說明,否則不得使用 `any` 或動態型別
+- **錯誤處理**: 所有錯誤情況必須明確處理;不得有靜默失敗或裸露的 except 子句
+- **程式碼審查**: 所有變更必須通過同儕審查,驗證是否符合這些標準
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+**理由**: 高品質程式碼降低維護負擔、加速新成員上手,並防止技術債累積。標準透過自動化工具和同儕審查機制強制執行。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### II. 測試優先開發 (不可妥協)
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+測試驅動開發對所有功能為強制要求:
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- **先寫測試**: 測試必須在實作開始前編寫並獲得批准
+- **紅綠重構循環**: 測試必須先失敗,實作後通過,然後進行重構
+- **覆蓋率要求**: 所有新程式碼最低 80% 測試覆蓋率;關鍵路徑需要 95% 覆蓋率
+- **測試類別**:
+  - **單元測試**: 必須覆蓋所有業務邏輯、純函式和獨立元件
+  - **整合測試**: 必須驗證模組、服務和外部依賴之間的互動
+  - **契約測試**: 必須驗證 API 端點、模式和服務間通訊
+- **無測試不實作**: 只有實作而沒有測試的 Pull Request 將被拒絕
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**理由**: TDD 確保在編碼前需求明確,提供活文檔,支援自信重構,並及早捕捉回歸錯誤。
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+### III. 使用者體驗一致性
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+所有面向使用者的功能必須在系統中保持一致性:
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+- **設計系統合規**: 所有 UI 元件必須遵循既定的設計系統;未經設計團隊批准不得使用一次性樣式
+- **互動模式**: 類似的使用者操作在不同功能間必須表現一致(例如:儲存按鈕、錯誤訊息、導航)
+- **無障礙標準**: 必須符合 WCAG 2.1 AA 級標準最低要求:
+  - 所有互動元素的鍵盤導航
+  - 螢幕閱讀器相容性
+  - 足夠的色彩對比度(一般文字 4.5:1,大型文字 3:1)
+  - 所有互動元素的焦點指示器
+- **錯誤訊息**: 面向使用者的錯誤必須可操作、清晰且語氣一致;不得向終端使用者暴露技術術語
+- **回應回饋**: 所有使用者操作必須提供即時的視覺回饋(載入狀態、成功/錯誤通知)
+- **本地化準備**: 所有面向使用者的文字必須外部化,以支援未來的國際化需求
+
+**理由**: 一致的使用者體驗降低認知負荷、提升使用者滿意度、支援無障礙需求,並在平台上保持專業形象。
+
+### IV. 效能要求
+
+所有功能必須符合以下效能標準:
+
+- **回應時間目標**:
+  - API 端點必須在 95 百分位數(P95)內於 200ms 內回應
+  - 頁面載入必須在 3G 連線下於 1.5 秒內完成初始渲染
+  - 互動時間(TTI)必須在 3.5 秒內
+- **資源限制**:
+  - 前端每個使用者會話的記憶體使用必須保持在 100MB 以下
+  - 資料庫查詢必須優化並使用適當索引;不得有 N+1 查詢
+  - API 端點在正常負載下必須處理至少 1000 請求/秒
+- **優化要求**:
+  - 圖片必須優化並透過 CDN 提供;折疊下方的圖片需要延遲載入
+  - Bundle 大小必須進行程式碼分割;單一 JavaScript bundle 不得超過 200KB(gzipped)
+  - 返回超過 100 行的資料庫查詢必須實作分頁
+- **效能測試**: 新功能必須包含效能基準,證明符合上述標準
+- **監控**: 所有端點必須發出 P50、P95、P99 延遲追蹤的效能指標
+
+**理由**: 效能直接影響使用者滿意度和留存率。明確標準防止隨時間推移的效能退化,並確保系統成長時的可擴展性。
+
+### V. 文檔語言標準 (不可妥協)
+
+所有專案文檔必須使用繁體中文(zh-TW)編寫:
+
+- **規範文檔**: 所有功能規範(spec.md)必須使用繁體中文編寫
+- **實作計劃**: 所有實作計劃(plan.md)必須使用繁體中文編寫
+- **任務清單**: 所有任務清單(tasks.md)必須使用繁體中文編寫
+- **使用者文檔**: 所有面向使用者的文檔、README、使用指南必須使用繁體中文
+- **註解標準**: 程式碼中的使用者導向註解應優先使用繁體中文;技術註解可使用英文
+- **提交訊息**: Git 提交訊息建議使用繁體中文以保持一致性
+- **例外情況**: 
+  - 程式碼識別符(變數名、函式名、類別名)使用英文
+  - 技術 API 文檔可使用英文
+  - 第三方整合文檔遵循該服務的語言慣例
+
+**理由**: 統一的文檔語言確保團隊成員能夠有效溝通,降低語言障礙,提升協作效率,並確保所有團隊成員都能完整理解專案需求和設計決策。
+
+## 品質保證閘門
+
+所有程式碼變更在生產環境部署前必須通過以下閘門:
+
+- **自動化測試**: 所有測試(單元、整合、契約)必須在 CI/CD 管線中通過
+- **程式碼檢查與格式化**: 程式碼必須通過所有檢查規則(ESLint、Pylint 等)並符合專案格式標準(Prettier、Black 等)
+- **安全性掃描**: 依賴項必須通過安全漏洞掃描;不允許高風險或嚴重漏洞
+- **效能驗證**: 效能基準必須證明符合第 IV 節標準
+- **無障礙稽核**: 面向使用者的變更必須通過自動化無障礙測試(axe、pa11y 等)
+- **程式碼審查批准**: 需要至少兩位熟悉相關領域的團隊成員批准
+
+## 開發工作流程
+
+### 功能開發流程
+
+1. **規範階段**: 使用者故事必須以 spec.md 格式記錄驗收標準(使用繁體中文)
+2. **計劃階段**: 實作計劃必須包含憲法檢查,驗證是否符合所有原則(使用繁體中文)
+3. **測試撰寫階段**: 測試必須在實作前編寫並獲得批准
+4. **實作階段**: 編寫程式碼以使測試通過,同時遵守品質標準
+5. **審查階段**: Pull Request 經過同儕審查、自動化測試和品質閘門驗證
+6. **部署階段**: 透過 staging → production 管線部署變更,並進行監控
+
+### 持續改進
+
+- **回顧會議**: 團隊必須在每個衝刺階段進行回顧,以識別流程改進機會
+- **指標追蹤**: 必須每月追蹤和審查程式碼品質指標(測試覆蓋率、技術債、效能)
+- **標準演進**: 當有數據或團隊共識支持時,可透過修訂流程更新原則
+
+## 治理
+
+### 修訂程序
+
+本憲法優先於所有其他開發實踐和標準。修訂遵循以下流程:
+
+1. **提案**: 團隊成員以修訂提案格式記錄建議變更及其理由
+2. **審查**: 由技術主管和相關利害關係人審查提案
+3. **批准**: 需要技術領導層和受影響團隊的共識
+4. **文檔**: 已批准的變更記錄版本增量和理由
+5. **遷移計劃**: 如果變更影響現有程式碼,必須建立並執行遷移計劃
+6. **溝通**: 所有團隊成員必須收到憲法修訂的通知
+
+### 版本語意
+
+- **MAJOR(主版本)**: 向後不相容的變更,移除或重新定義原則(需要遷移計劃)
+- **MINOR(次版本)**: 新增原則或現有原則的實質擴展
+- **PATCH(修訂版本)**: 澄清、措辭改進或非語意細化
+
+### 合規性
+
+- **憲法檢查**: 所有實作計劃必須包含憲法檢查,驗證是否合規
+- **執行**: 違反憲法原則的 Pull Request 將被拒絕,除非複雜性被明確證明和記錄
+- **例外情況**: 例外需要在 plan.md 的「複雜性追蹤」區段中書面說明,並提供緩解計劃
+
+### 執行指南
+
+關於詳細的開發指南和代理特定工作流程,請參考 `.github/prompts/*.prompt.md` 命令檔案。
+
+**版本**: 1.1.0 | **批准日期**: 2026-01-28 | **最後修訂**: 2026-01-28
