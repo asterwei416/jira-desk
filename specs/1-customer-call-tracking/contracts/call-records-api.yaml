@@ -1,0 +1,958 @@
+openapi: 3.0.3
+info:
+  title: 來電紀錄 API
+  description: 客服來電問題紀錄的 CRUD 操作、搜尋、狀態更新、編輯鎖定等功能
+  version: 1.0.0
+  contact:
+    name: 開發團隊
+
+servers:
+  - url: https://calltracking.example.com/api
+    description: 正式環境
+  - url: https://localhost:5001/api
+    description: 本地開發環境
+
+tags:
+  - name: CallRecords
+    description: 來電紀錄管理
+  - name: EditLock
+    description: 編輯鎖定控制
+  - name: ChangeHistory
+    description: 變更歷史查詢
+  - name: Reports
+    description: Excel 報表匯出
+
+paths:
+  /call-records:
+    get:
+      tags:
+        - CallRecords
+      summary: 搜尋來電紀錄
+      description: 支援多條件篩選、分頁、排序
+      parameters:
+        - name: keyword
+          in: query
+          description: 關鍵字（搜尋主旨、內容、聯絡人）
+          schema:
+            type: string
+          example: "Google 表單"
+        - name: inquirySystemId
+          in: query
+          description: 詢問系統 ID
+          schema:
+            type: integer
+          example: 1
+        - name: status
+          in: query
+          description: 處理狀態
+          schema:
+            type: string
+            enum: [Pending, InProgress, Completed, Closed]
+          example: "Pending"
+        - name: urgencyLevel
+          in: query
+          description: 緊急程度
+          schema:
+            type: string
+            enum: [Low, Medium, High]
+          example: "High"
+        - name: startDate
+          in: query
+          description: 開始日期 (ISO 8601 格式)
+          schema:
+            type: string
+            format: date
+          example: "2026-01-01"
+        - name: endDate
+          in: query
+          description: 結束日期 (ISO 8601 格式)
+          schema:
+            type: string
+            format: date
+          example: "2026-01-31"
+        - name: pageNumber
+          in: query
+          description: 頁碼（從 1 開始）
+          schema:
+            type: integer
+            default: 1
+          example: 1
+        - name: pageSize
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          example: 20
+        - name: sortBy
+          in: query
+          description: 排序欄位
+          schema:
+            type: string
+            default: "createdAt"
+            enum: [createdAt, updatedAt, urgencyLevel]
+          example: "createdAt"
+        - name: sortOrder
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: "desc"
+            enum: [asc, desc]
+          example: "desc"
+      responses:
+        '200':
+          description: 搜尋成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordPagedResponse'
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    post:
+      tags:
+        - CallRecords
+      summary: 新增來電紀錄
+      description: 建立新的客服來電問題紀錄，自動發送 LINE 通知給負責人員
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCallRecordRequest'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordDetailResponse'
+        '400':
+          description: 請求資料驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /call-records/{id}:
+    get:
+      tags:
+        - CallRecords
+      summary: 查詢單筆來電紀錄詳情
+      description: 取得來電紀錄完整資訊，包含關聯的詢問系統、處理人員、變更歷史
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordDetailResponse'
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    put:
+      tags:
+        - CallRecords
+      summary: 更新來電紀錄
+      description: 更新來電紀錄內容，需先取得編輯鎖定，自動記錄變更歷史
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCallRecordRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordDetailResponse'
+        '400':
+          description: 請求資料驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 編輯衝突（被其他人鎖定或版本號不符）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "此紀錄正在被張三編輯中"
+                code: "RECORD_LOCKED"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    delete:
+      tags:
+        - CallRecords
+      summary: 刪除來電紀錄
+      description: 刪除指定來電紀錄（僅管理者權限）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 無權限執行此操作
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /call-records/{id}/status:
+    patch:
+      tags:
+        - CallRecords
+      summary: 更新處理狀態
+      description: 快速更新來電紀錄的處理狀態，自動記錄變更歷史
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [Pending, InProgress, Completed, Closed]
+                  description: 新的處理狀態
+                  example: "Completed"
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordDetailResponse'
+        '400':
+          description: 狀態值無效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /call-records/{id}/handlers:
+    put:
+      tags:
+        - CallRecords
+      summary: 更新處理人員
+      description: 指派或更新來電紀錄的處理人員清單
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - handlerIds
+              properties:
+                handlerIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: 處理人員 ID 清單
+                  example: [1, 2, 3]
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordDetailResponse'
+        '400':
+          description: 人員 ID 無效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /call-records/{id}/lock:
+    post:
+      tags:
+        - EditLock
+      summary: 取得編輯鎖定
+      description: 在開始編輯前取得紀錄的編輯鎖定，鎖定有效期 30 分鐘
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '200':
+          description: 取得鎖定成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "已取得編輯鎖定"
+                  lockedUntil:
+                    type: string
+                    format: date-time
+                    description: 鎖定到期時間
+                    example: "2026-01-28T15:30:00Z"
+        '409':
+          description: 無法取得鎖定（已被其他人鎖定）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "此紀錄正在被張三編輯中，鎖定到 2026-01-28 15:30"
+                  lockedBy:
+                    type: string
+                    example: "張三"
+                  lockedUntil:
+                    type: string
+                    format: date-time
+                    example: "2026-01-28T15:30:00Z"
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    delete:
+      tags:
+        - EditLock
+      summary: 釋放編輯鎖定
+      description: 編輯完成或取消編輯時釋放鎖定
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '204':
+          description: 釋放鎖定成功
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /call-records/{id}/change-history:
+    get:
+      tags:
+        - ChangeHistory
+      summary: 查詢變更歷史
+      description: 取得指定來電紀錄的所有變更歷史記錄
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 來電紀錄 ID
+          schema:
+            type: integer
+          example: 123
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  callRecordId:
+                    type: integer
+                    example: 123
+                  changes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChangeHistoryItem'
+        '404':
+          description: 找不到指定紀錄
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /reports/excel:
+    post:
+      tags:
+        - Reports
+      summary: 匯出 Excel 報表
+      description: 根據篩選條件匯出來電紀錄為 Excel 檔案，最多 5000 筆
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExcelReportRequest'
+      responses:
+        '200':
+          description: 匯出成功
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: 檔案下載名稱
+              schema:
+                type: string
+                example: 'attachment; filename="來電紀錄_2026-01.xlsx"'
+        '400':
+          description: 請求參數錯誤或筆數超過限制
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "匯出筆數超過限制 5000 筆，請縮小篩選範圍"
+                code: "EXPORT_LIMIT_EXCEEDED"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 使用 JWT Token 進行身份驗證，Token 從登入 API 取得
+
+  schemas:
+    CallRecordPagedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallRecordListItem'
+        pageNumber:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        totalCount:
+          type: integer
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+    
+    CallRecordListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        subject:
+          type: string
+          example: "Google 表單無法提交"
+        inquirySystem:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Google 表單系統"
+        status:
+          type: string
+          enum: [Pending, InProgress, Completed, Closed]
+          example: "Pending"
+        urgencyLevel:
+          type: string
+          enum: [Low, Medium, High]
+          example: "High"
+        contactName:
+          type: string
+          example: "王小明"
+        handlers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 5
+              name:
+                type: string
+                example: "張三"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-28T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-28T14:20:00Z"
+        isLocked:
+          type: boolean
+          description: 是否被鎖定中
+          example: false
+        lockedBy:
+          type: string
+          nullable: true
+          description: 鎖定者姓名
+          example: null
+    
+    CallRecordDetailResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        subject:
+          type: string
+          example: "Google 表單無法提交"
+        content:
+          type: string
+          example: "客戶反應 Google 表單點擊提交後無反應，已嘗試重新整理仍無法送出。"
+        inquirySystem:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Google 表單系統"
+        status:
+          type: string
+          enum: [Pending, InProgress, Completed, Closed]
+          example: "Pending"
+        urgencyLevel:
+          type: string
+          enum: [Low, Medium, High]
+          example: "High"
+        contactName:
+          type: string
+          example: "王小明"
+        contactPhone:
+          type: string
+          example: "0912-345-678"
+        faqReference:
+          type: string
+          nullable: true
+          example: "https://faq.example.com/google-form-submit"
+        handlers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 5
+              name:
+                type: string
+                example: "張三"
+              lineUserId:
+                type: string
+                nullable: true
+                example: "U1234567890abcdef"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-28T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-28T14:20:00Z"
+        createdBy:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "user-guid-123"
+            name:
+              type: string
+              example: "李四"
+        isLocked:
+          type: boolean
+          example: false
+        lockedBy:
+          type: string
+          nullable: true
+          example: null
+        lockedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        rowVersion:
+          type: string
+          description: 並發控制版本號（Base64 編碼）
+          example: "AAAAAAAAB9E="
+    
+    CreateCallRecordRequest:
+      type: object
+      required:
+        - subject
+        - content
+        - inquirySystemId
+        - urgencyLevel
+        - contactName
+        - contactPhone
+      properties:
+        subject:
+          type: string
+          maxLength: 50
+          description: 問題主旨
+          example: "Google 表單無法提交"
+        content:
+          type: string
+          maxLength: 150
+          description: 問題內容
+          example: "客戶反應 Google 表單點擊提交後無反應，已嘗試重新整理仍無法送出。"
+        inquirySystemId:
+          type: integer
+          description: 詢問系統 ID
+          example: 1
+        urgencyLevel:
+          type: string
+          enum: [Low, Medium, High]
+          description: 緊急程度
+          example: "High"
+        contactName:
+          type: string
+          maxLength: 50
+          description: 聯絡人姓名
+          example: "王小明"
+        contactPhone:
+          type: string
+          maxLength: 20
+          description: 聯絡電話
+          example: "0912-345-678"
+        faqReference:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: FAQ 連結或說明
+          example: "https://faq.example.com/google-form-submit"
+    
+    UpdateCallRecordRequest:
+      type: object
+      required:
+        - subject
+        - content
+        - urgencyLevel
+        - contactName
+        - contactPhone
+        - rowVersion
+      properties:
+        subject:
+          type: string
+          maxLength: 50
+          example: "Google 表單無法提交（已解決）"
+        content:
+          type: string
+          maxLength: 150
+          example: "客戶反應 Google 表單點擊提交後無反應，已確認為瀏覽器快取問題，清除後正常。"
+        urgencyLevel:
+          type: string
+          enum: [Low, Medium, High]
+          example: "Medium"
+        contactName:
+          type: string
+          maxLength: 50
+          example: "王小明"
+        contactPhone:
+          type: string
+          maxLength: 20
+          example: "0912-345-678"
+        faqReference:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: "https://faq.example.com/browser-cache"
+        rowVersion:
+          type: string
+          description: 並發控制版本號（用於樂觀鎖定）
+          example: "AAAAAAAAB9E="
+    
+    ChangeHistoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        fieldName:
+          type: string
+          description: 變更欄位名稱
+          example: "Status"
+        oldValue:
+          type: string
+          nullable: true
+          description: 舊值
+          example: "Pending"
+        newValue:
+          type: string
+          nullable: true
+          description: 新值
+          example: "InProgress"
+        changedAt:
+          type: string
+          format: date-time
+          example: "2026-01-28T14:20:00Z"
+        changedBy:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "user-guid-123"
+            name:
+              type: string
+              example: "張三"
+    
+    ExcelReportRequest:
+      type: object
+      properties:
+        keyword:
+          type: string
+          nullable: true
+        inquirySystemId:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [Pending, InProgress, Completed, Closed]
+          nullable: true
+        urgencyLevel:
+          type: string
+          enum: [Low, Medium, High]
+          nullable: true
+        startDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-01-01"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-01-31"
+        reportMonth:
+          type: string
+          description: 報表月份 (yyyy/MM 格式，與 startDate/endDate 互斥)
+          pattern: '^\d{4}/\d{2}$'
+          nullable: true
+          example: "2026/01"
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 錯誤訊息
+          example: "找不到指定的來電紀錄"
+        code:
+          type: string
+          description: 錯誤代碼
+          example: "RECORD_NOT_FOUND"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-28T10:30:00Z"
+    
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "請求資料驗證失敗"
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        errors:
+          type: object
+          description: 各欄位驗證錯誤詳情
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            subject:
+              - "主旨不可為空"
+              - "主旨不可超過 50 字"
+            contactPhone:
+              - "連絡電話格式不正確"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-28T10:30:00Z"

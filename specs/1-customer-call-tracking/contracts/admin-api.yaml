@@ -1,0 +1,957 @@
+openapi: 3.0.3
+info:
+  title: 管理 API
+  description: 詢問系統管理、處理人員管理、處理人員對應管理、使用者管理（僅管理者權限）
+  version: 1.0.0
+  contact:
+    name: 開發團隊
+
+servers:
+  - url: https://calltracking.example.com/api
+    description: 正式環境
+  - url: https://localhost:5001/api
+    description: 本地開發環境
+
+tags:
+  - name: InquirySystems
+    description: 詢問系統管理
+  - name: Handlers
+    description: 處理人員管理
+  - name: HandlerMappings
+    description: 處理人員對應管理
+  - name: Users
+    description: 使用者管理
+
+paths:
+  # ===== 詢問系統管理 =====
+  /admin/inquiry-systems:
+    get:
+      tags:
+        - InquirySystems
+      summary: 查詢詢問系統清單
+      description: 取得所有詢問系統（支援篩選啟用/停用）
+      parameters:
+        - name: isActive
+          in: query
+          description: 篩選啟用狀態（不提供則返回全部）
+          schema:
+            type: boolean
+          example: true
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InquirySystem'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 無權限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    post:
+      tags:
+        - InquirySystems
+      summary: 新增詢問系統
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInquirySystemRequest'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InquirySystem'
+        '400':
+          description: 驗證失敗或系統名稱重複
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "系統名稱已存在"
+                code: "DUPLICATE_NAME"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 無權限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /admin/inquiry-systems/{id}:
+    get:
+      tags:
+        - InquirySystems
+      summary: 查詢單一詢問系統
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InquirySystem'
+        '404':
+          description: 找不到指定系統
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    put:
+      tags:
+        - InquirySystems
+      summary: 更新詢問系統
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInquirySystemRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InquirySystem'
+        '400':
+          description: 驗證失敗或名稱重複
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 找不到指定系統
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    delete:
+      tags:
+        - InquirySystems
+      summary: 刪除詢問系統
+      description: 刪除詢問系統（需確保沒有相關來電紀錄）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: 刪除成功
+        '400':
+          description: 無法刪除（有相關來電紀錄）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "此詢問系統有相關來電紀錄，無法刪除"
+                code: "HAS_RELATED_RECORDS"
+        '404':
+          description: 找不到指定系統
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  # ===== 處理人員管理 =====
+  /admin/handlers:
+    get:
+      tags:
+        - Handlers
+      summary: 查詢處理人員清單
+      parameters:
+        - name: isActive
+          in: query
+          description: 篩選啟用狀態
+          schema:
+            type: boolean
+          example: true
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Handler'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    post:
+      tags:
+        - Handlers
+      summary: 新增處理人員
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHandlerRequest'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Handler'
+        '400':
+          description: 驗證失敗或 LINE User ID 重複
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /admin/handlers/{id}:
+    get:
+      tags:
+        - Handlers
+      summary: 查詢單一處理人員
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Handler'
+        '404':
+          description: 找不到指定人員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    put:
+      tags:
+        - Handlers
+      summary: 更新處理人員
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHandlerRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Handler'
+        '400':
+          description: 驗證失敗或 LINE User ID 重複
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 找不到指定人員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    delete:
+      tags:
+        - Handlers
+      summary: 刪除處理人員
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          description: 找不到指定人員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  # ===== 處理人員對應管理 =====
+  /admin/handler-mappings:
+    get:
+      tags:
+        - HandlerMappings
+      summary: 查詢處理人員對應清單
+      parameters:
+        - name: inquirySystemId
+          in: query
+          description: 依詢問系統篩選
+          schema:
+            type: integer
+          example: 1
+        - name: handlerId
+          in: query
+          description: 依處理人員篩選
+          schema:
+            type: integer
+          example: 5
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HandlerMapping'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    post:
+      tags:
+        - HandlerMappings
+      summary: 新增處理人員對應
+      description: 指派處理人員負責特定詢問系統
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHandlerMappingRequest'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HandlerMapping'
+        '400':
+          description: 驗證失敗或對應關係已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "此處理人員已對應到該詢問系統"
+                code: "MAPPING_EXISTS"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /admin/handler-mappings/{id}:
+    delete:
+      tags:
+        - HandlerMappings
+      summary: 刪除處理人員對應
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          description: 找不到指定對應關係
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  # ===== 使用者管理 =====
+  /admin/users:
+    get:
+      tags:
+        - Users
+      summary: 查詢使用者清單
+      parameters:
+        - name: role
+          in: query
+          description: 依角色篩選
+          schema:
+            type: string
+            enum: [Staff, Admin]
+          example: "Staff"
+        - name: isActive
+          in: query
+          description: 篩選啟用狀態
+          schema:
+            type: boolean
+          example: true
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    post:
+      tags:
+        - Users
+      summary: 新增使用者
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: 驗證失敗或使用者名稱重複
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "使用者名稱已存在"
+                code: "DUPLICATE_USERNAME"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /admin/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: 查詢單一使用者
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "user-guid-123"
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: 找不到指定使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    put:
+      tags:
+        - Users
+      summary: 更新使用者
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "user-guid-123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: 驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 找不到指定使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    delete:
+      tags:
+        - Users
+      summary: 刪除使用者
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "user-guid-123"
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          description: 找不到指定使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /admin/users/{id}/reset-password:
+    post:
+      tags:
+        - Users
+      summary: 重設使用者密碼
+      description: 管理者重設指定使用者的密碼
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "user-guid-123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newPassword
+              properties:
+                newPassword:
+                  type: string
+                  format: password
+                  description: 新密碼（至少 8 字元）
+                  example: "NewPassword123"
+      responses:
+        '200':
+          description: 重設成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "密碼重設成功"
+        '400':
+          description: 新密碼不符合規則
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 找不到指定使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    InquirySystem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Google 表單系統"
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-01T00:00:00Z"
+    
+    CreateInquirySystemRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: "Google 表單系統"
+    
+    UpdateInquirySystemRequest:
+      type: object
+      required:
+        - name
+        - isActive
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: "Google 表單系統"
+        isActive:
+          type: boolean
+          example: true
+    
+    Handler:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+        name:
+          type: string
+          example: "張三"
+        lineUserId:
+          type: string
+          nullable: true
+          example: "U1234567890abcdef"
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-01T00:00:00Z"
+    
+    CreateHandlerRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          example: "張三"
+        lineUserId:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: "U1234567890abcdef"
+    
+    UpdateHandlerRequest:
+      type: object
+      required:
+        - name
+        - isActive
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          example: "張三"
+        lineUserId:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: "U1234567890abcdef"
+        isActive:
+          type: boolean
+          example: true
+    
+    HandlerMapping:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        handler:
+          $ref: '#/components/schemas/Handler'
+        inquirySystem:
+          $ref: '#/components/schemas/InquirySystem'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-15T00:00:00Z"
+    
+    CreateHandlerMappingRequest:
+      type: object
+      required:
+        - handlerId
+        - inquirySystemId
+      properties:
+        handlerId:
+          type: integer
+          example: 5
+        inquirySystemId:
+          type: integer
+          example: 1
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user-guid-123"
+        username:
+          type: string
+          example: "john.doe"
+        name:
+          type: string
+          example: "李四"
+        role:
+          type: string
+          enum: [Staff, Admin]
+          example: "Staff"
+        lineUserId:
+          type: string
+          nullable: true
+          example: "U1234567890abcdef"
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-01T00:00:00Z"
+    
+    CreateUserRequest:
+      type: object
+      required:
+        - username
+        - password
+        - name
+        - role
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          example: "john.doe"
+        password:
+          type: string
+          format: password
+          description: 初始密碼（至少 8 字元）
+          example: "InitialPass123"
+        name:
+          type: string
+          maxLength: 50
+          example: "李四"
+        role:
+          type: string
+          enum: [Staff, Admin]
+          example: "Staff"
+    
+    UpdateUserRequest:
+      type: object
+      required:
+        - name
+        - role
+        - isActive
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          example: "李四"
+        role:
+          type: string
+          enum: [Staff, Admin]
+          example: "Admin"
+        isActive:
+          type: boolean
+          example: true
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "找不到指定資源"
+        code:
+          type: string
+          example: "RESOURCE_NOT_FOUND"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-28T10:30:00Z"

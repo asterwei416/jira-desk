@@ -1,0 +1,511 @@
+openapi: 3.0.3
+info:
+  title: 認證 API
+  description: 使用者登入（系統內建帳號 + LINE Login）、登出、個人資料管理
+  version: 1.0.0
+  contact:
+    name: 開發團隊
+
+servers:
+  - url: https://calltracking.example.com/api
+    description: 正式環境
+  - url: https://localhost:5001/api
+    description: 本地開發環境
+
+tags:
+  - name: Auth
+    description: 認證與授權
+  - name: Profile
+    description: 個人資料管理
+  - name: LineLogin
+    description: LINE Login 整合
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: 系統內建帳號登入
+      description: 使用使用者名稱和密碼登入，返回 JWT Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: 請求資料驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 帳號或密碼錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "帳號或密碼錯誤"
+                code: "INVALID_CREDENTIALS"
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: 登出
+      description: 使用者登出（Server-side 註銷 Token 或僅由 Client 清除）
+      responses:
+        '204':
+          description: 登出成功
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /auth/line/login:
+    get:
+      tags:
+        - LineLogin
+      summary: 啟動 LINE Login 流程
+      description: 重定向使用者到 LINE 授權頁面
+      responses:
+        '302':
+          description: 重定向到 LINE 授權頁面
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=..."
+
+  /auth/line/callback:
+    get:
+      tags:
+        - LineLogin
+      summary: LINE Login 回調端點
+      description: LINE 授權後回調，交換 Authorization Code 取得 Access Token，並綁定或登入使用者
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: LINE 回傳的 Authorization Code
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: CSRF 防護參數
+          schema:
+            type: string
+      responses:
+        '302':
+          description: 處理完成，重定向到前端頁面
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                newUser:
+                  value: "https://calltracking.example.com/auth/bind?lineUserId=U1234567890abcdef&displayName=張三"
+                  description: 首次 LINE 登入，導向綁定頁面
+                existingUser:
+                  value: "https://calltracking.example.com/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  description: 已綁定使用者，直接登入並附帶 JWT Token
+        '400':
+          description: 回調參數錯誤或授權失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/line/bind:
+    post:
+      tags:
+        - LineLogin
+      summary: 綁定 LINE 帳號到系統帳號
+      description: 管理者批准將 LINE 帳號綁定到內部使用者帳號（僅 Admin 權限）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindLineAccountRequest'
+      responses:
+        '200':
+          description: 綁定成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "LINE 帳號綁定成功"
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: 請求資料驗證失敗或 LINE User ID 已綁定
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "此 LINE 帳號已綁定到其他使用者"
+                code: "LINE_ALREADY_BOUND"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 無權限執行此操作（非管理者）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /auth/line/unbind:
+    post:
+      tags:
+        - LineLogin
+      summary: 解除 LINE 帳號綁定
+      description: 管理者解除使用者的 LINE 帳號綁定（僅 Admin 權限）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  description: 使用者 ID
+                  example: "user-guid-123"
+      responses:
+        '200':
+          description: 解除綁定成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "LINE 帳號綁定已解除"
+        '404':
+          description: 找不到指定使用者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 無權限執行此操作
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /auth/profile:
+    get:
+      tags:
+        - Profile
+      summary: 查詢個人資料
+      description: 取得當前登入使用者的個人資料
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    put:
+      tags:
+        - Profile
+      summary: 更新個人資料
+      description: 更新顯示名稱等個人資訊
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: 請求資料驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /auth/change-password:
+    post:
+      tags:
+        - Profile
+      summary: 變更密碼
+      description: 使用者變更自己的登入密碼
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: 變更成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "密碼變更成功"
+        '400':
+          description: 舊密碼錯誤或新密碼不符合規則
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "舊密碼錯誤"
+                code: "INVALID_OLD_PASSWORD"
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: 刷新 JWT Token
+      description: 使用 Refresh Token 取得新的 Access Token（選配功能）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh Token
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Refresh Token 無效或過期
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 使用 JWT Token 進行身份驗證
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: 使用者名稱
+          example: "admin"
+        password:
+          type: string
+          format: password
+          description: 密碼
+          example: "Admin@123"
+    
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT Access Token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWd1aWQtMTIzIiwibmFtZSI6IuW8teS4iSIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTczODA1NjAwMCwiZXhwIjoxNzM4MTQyNDAwLCJpYXQiOjE3MzgwNTYwMDB9.xxxxx"
+        refreshToken:
+          type: string
+          nullable: true
+          description: Refresh Token（選配）
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn:
+          type: integer
+          description: Token 有效期（秒）
+          example: 86400
+        user:
+          $ref: '#/components/schemas/UserProfile'
+    
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 使用者 ID
+          example: "user-guid-123"
+        username:
+          type: string
+          description: 使用者名稱
+          example: "admin"
+        name:
+          type: string
+          description: 顯示名稱
+          example: "張三"
+        role:
+          type: string
+          enum: [Staff, Admin]
+          description: 角色
+          example: "Admin"
+        lineUserId:
+          type: string
+          nullable: true
+          description: 綁定的 LINE User ID
+          example: "U1234567890abcdef"
+        isActive:
+          type: boolean
+          description: 是否啟用
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+          example: "2026-01-01T00:00:00Z"
+    
+    UpdateProfileRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          description: 顯示名稱
+          example: "張三"
+    
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+          description: 舊密碼
+          example: "OldPassword123"
+        newPassword:
+          type: string
+          format: password
+          description: 新密碼（至少 8 字元，包含大小寫字母和數字）
+          example: "NewPassword456"
+    
+    BindLineAccountRequest:
+      type: object
+      required:
+        - userId
+        - lineUserId
+        - displayName
+      properties:
+        userId:
+          type: string
+          description: 要綁定的系統使用者 ID
+          example: "user-guid-123"
+        lineUserId:
+          type: string
+          description: LINE User ID
+          example: "U1234567890abcdef"
+        displayName:
+          type: string
+          description: LINE 顯示名稱（僅供參考）
+          example: "張三"
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 錯誤訊息
+          example: "帳號或密碼錯誤"
+        code:
+          type: string
+          description: 錯誤代碼
+          example: "INVALID_CREDENTIALS"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-28T10:30:00Z"
