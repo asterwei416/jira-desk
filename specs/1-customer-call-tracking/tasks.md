@@ -483,18 +483,18 @@
 
 #### 後端 Service 層
 
-- [ ] T067 [US5] 建立 ReportService
+- [x] T067 [US5] 建立 ReportService
   - 在 `Core/Services/ReportService.cs` 建立 Service
   - 介面定義在 `Core/Interfaces/IReportService.cs`
   - 實作方法: `GenerateExcelReportAsync(SearchFilterModel filter)`
 
-- [ ] T068 [US5] 實作 EPPlus Excel 生成邏輯
+- [x] T068 [US5] 實作 EPPlus Excel 生成邏輯
   - 安裝 NuGet: `EPPlus` (版本 7+)
   - 建立工作表 1: 篩選條件摘要（`CreateSummarySheet()`）
   - 建立工作表 2: 明細資料（`CreateDetailSheet()`）
   - 建立工作表 3: 彙總統計（`CreateStatisticsSheet()`）
 
-- [ ] T069 [US5] 實作月份彙總統計邏輯
+- [x] T069 [US5] 實作月份彙總統計邏輯
   - 依自然月份（yyyy/MM）分組
   - 統計: 按月份、詢問系統、處理人員的總筆數
   - 生成圖表（選配）
@@ -509,12 +509,12 @@
 
 #### 前端 MVC Views
 
-- [ ] T071 [P] [US5] 在搜尋頁面加入「匯出報表」按鈕
+- [x] T071 [P] [US5] 在搜尋頁面加入「匯出報表」按鈕
   - 取得當前篩選條件
   - AJAX POST 到報表 API
   - 處理檔案下載（使用 Blob URL 或 Form Submit）
 
-- [ ] T072 [P] [US5] 顯示匯出進度提示
+- [x] T072 [P] [US5] 顯示匯出進度提示
   - 點擊按鈕後顯示 Loading 遮罩
   - 完成後自動下載並關閉 Loading
 

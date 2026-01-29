@@ -21,7 +21,12 @@
             <div class="card-body">
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                     <h2 class="h5 mb-0">搜尋結果</h2>
-                    <span id="result-summary" class="text-muted"></span>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-success btn-sm" id="export-excel-btn" disabled>
+                            <i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel
+                        </button>
+                        <span id="result-summary" class="text-muted"></span>
+                    </div>
                 </div>
                 <div id="result-alert" class="alert alert-danger d-none" role="alert"></div>
 
@@ -185,7 +190,7 @@
             const query = getFormQuery();
 
             $.ajax({
-                url: "/api/call-records",
+                url: "/api/CallRecords",
                 method: "GET",
                 data: query,
                 success: function (data) {
@@ -195,10 +200,23 @@
                     const pageNumber = data.PageNumber ?? data.pageNumber ?? 1;
                     const totalPages = data.TotalPages ?? data.totalPages ?? 1;
                     renderPagination(pageNumber, totalPages);
+                    
+                    // 啟用/停用匯出按鈕
+                    const totalCount = data.TotalCount ?? data.totalCount ?? 0;
+                    const exportButton = $("#export-excel-btn");
+                    if (totalCount > 0) {
+                        exportButton.prop("disabled", false);
+                        exportButton.data("hasResults", true);
+                    } else {
+                        exportButton.prop("disabled", true);
+                        exportButton.data("hasResults", false);
+                    }
                 },
                 error: function (xhr) {
                     const message = xhr.responseJSON?.error || "查詢失敗，請稍後再試";
                     resultAlert.removeClass("d-none").text(message);
+                    // 錯誤時停用匯出按鈕
+                    $("#export-excel-btn").prop("disabled", true).data("hasResults", false);
                 },
                 complete: function () {
                     showLoading(false);
@@ -295,6 +313,61 @@
         form.on("submit", function (e) {
             e.preventDefault();
             submitSearch();
+        });
+
+        // 匯出 Excel 功能
+        const exportButton = $("#export-excel-btn");
+
+        exportButton.on("click", function () {
+            if (!exportButton.data("hasResults")) return;
+
+            // 顯示 Loading
+            const originalText = exportButton.html();
+            exportButton.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span>匯出中...');
+            showLoading(true);
+
+            // 取得篩選條件
+            const exportData = getFormQuery();
+            // 移除分頁參數（匯出不需要）
+            delete exportData.pageNumber;
+            delete exportData.pageSize;
+            delete exportData.sortBy;
+            delete exportData.sortOrder;
+
+            $.ajax({
+                url: "/api/Reports/excel",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(exportData),
+                xhrFields: {
+                    responseType: "blob"
+                },
+                success: function (blob) {
+                    // 建立下載連結
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    const month = new Date().toISOString().slice(0, 7).replace("-", "/");
+                    a.download = `來電紀錄_${month}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                },
+                error: function (xhr) {
+                    let errorMsg = "匯出失敗";
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    } else if (xhr.status === 400) {
+                        errorMsg = "匯出筆數超過 5000 筆限制，請縮小篩選範圍";
+                    }
+                    resultAlert.removeClass("d-none").text(errorMsg);
+                },
+                complete: function () {
+                    showLoading(false);
+                    exportButton.prop("disabled", false).html(originalText);
+                }
+            });
         });
 
         submitSearch();
