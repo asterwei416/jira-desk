@@ -30,9 +30,9 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
-// 註冊資料庫上下文
+// 註冊資料庫上下文 (SQLite)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 註冊 Repositories
 builder.Services.AddScoped<ICallRecordRepository, CallRecordRepository>();
@@ -52,12 +52,13 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // 開發環境自動初始化資料庫
-if (app.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    DbInitializer.Initialize(context);
-}
+// 暫時註解，SQLite 已有種子資料
+// if (app.Environment.IsDevelopment())
+// {
+//     using var scope = app.Services.CreateScope();
+//     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//     DbInitializer.Initialize(context);
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
