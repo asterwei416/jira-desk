@@ -1,18 +1,46 @@
 using System.Text.Json;
+using CallTrackingSystem.Core.Interfaces;
+using CallTrackingSystem.Core.Services;
 using CallTrackingSystem.Infrastructure.Data;
+using CallTrackingSystem.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+    {
+        // 設定 JSON 序列化選項
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+        options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // 啟用 XML 註解
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 // 註冊資料庫上下文
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 註冊 Repositories
+builder.Services.AddScoped<ICallRecordRepository, CallRecordRepository>();
+builder.Services.AddScoped<IInquirySystemRepository, InquirySystemRepository>();
+builder.Services.AddScoped<IHandlerRepository, HandlerRepository>();
+
+// 註冊 Services
+builder.Services.AddScoped<CallRecordService>();
 
 // 註冊健康檢查
 builder.Services.AddHealthChecks()
@@ -39,6 +67,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// 啟用 Controllers
+app.MapControllers();
 
 // 健康檢查端點
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
