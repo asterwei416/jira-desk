@@ -39,10 +39,14 @@ builder.Services.AddScoped<ICallRecordRepository, CallRecordRepository>();
 builder.Services.AddScoped<IInquirySystemRepository, InquirySystemRepository>();
 builder.Services.AddScoped<IHandlerRepository, HandlerRepository>();
 builder.Services.AddScoped<IChangeHistoryRepository, ChangeHistoryRepository>();
+builder.Services.AddScoped<INotificationLogRepository, NotificationLogRepository>();
+builder.Services.AddScoped<CallTrackingSystem.Infrastructure.Services.ILineMessagingClient, CallTrackingSystem.Infrastructure.Services.LineMessagingClientWrapper>();
 
 // 註冊 Services
 builder.Services.AddScoped<CallRecordService>();
 builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
+builder.Services.AddScoped<INotificationLogService, NotificationLogService>();
+builder.Services.AddScoped<ILineNotificationService, CallTrackingSystem.Infrastructure.Services.LineNotificationService>();
 
 // 註冊健康檢查
 builder.Services.AddHealthChecks()

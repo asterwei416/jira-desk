@@ -169,6 +169,17 @@ public record ChangeHistoryResponse
 }
 
 /// <summary>
+/// 通知記錄項目 DTO
+/// </summary>
+public record NotificationLogItemDto
+{
+    public required string LineUserId { get; init; }
+    public required bool Success { get; init; }
+    public string? ErrorMessage { get; init; }
+    public required DateTime SentAt { get; init; }
+}
+
+/// <summary>
 /// 詢問系統 DTO
 /// </summary>
 public record InquirySystemDto

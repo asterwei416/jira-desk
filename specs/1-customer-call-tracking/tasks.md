@@ -423,47 +423,47 @@
 
 #### 後端 Service 層
 
-- [ ] T059 [US4] 完善 LineNotificationService
+- [x] T059 [US4] 完善 LineNotificationService
   - 實作 `BuildCallRecordFlexMessage()` 方法（依 research.md 的範本）
   - Flex Message 包含: 標題、詢問系統、主旨、緊急度、聯絡人、電話、查看詳情按鈕
   - 處理 LINE API 錯誤（401, 400, 429 等）
 
-- [ ] T060 [US4] 建立 NotificationLogService
+- [x] T060 [US4] 建立 NotificationLogService
   - 在 `Core/Services/NotificationLogService.cs` 建立 Service
   - 實作 `LogNotificationAsync()` 方法
   - 實作 `GetFailedNotificationsAsync()` 方法（供管理者查詢）
 
 #### Repository 層
 
-- [ ] T061 [P] [US4] 建立 NotificationLogRepository
+- [x] T061 [P] [US4] 建立 NotificationLogRepository
   - 在 `Infrastructure/Repositories/NotificationLogRepository.cs` 建立 Repository
   - 實作方法: `GetByCallRecordIdAsync()`, `GetFailedAsync()`
 
 #### Web API 層
 
-- [ ] T062 [P] [US4] 在 CallRecordController 新增通知查詢端點
+- [x] T062 [P] [US4] 在 CallRecordController 新增通知查詢端點
   - 實作 GET /api/call-records/{id}/notifications（查詢通知記錄）
   - Response DTO: `NotificationLogItem[]` 包含 `lineUserId`, `success`, `errorMessage`, `sentAt`
 
 #### 設定與部署
 
-- [ ] T063 [US4] 設定 LINE Messaging API Channel
+- [x] T063 [US4] 設定 LINE Messaging API Channel
   - 依 quickstart.md 步驟建立 Channel
   - 取得 Channel Access Token 和 Channel Secret
   - 更新 appsettings.json 的 LINE 設定
 
-- [ ] T064 [US4] 建立 Handler 並填入 LINE User ID
+- [x] T064 [US4] 建立 Handler 並填入 LINE User ID
   - 在資料庫新增測試用 Handler
   - 填入實際的 LINE User ID（需先加 Bot 為好友）
 
 #### 測試
 
-- [ ] T065 [P] [US4] LineNotificationService 單元測試
+- [x] T065 [P] [US4] LineNotificationService 單元測試
   - Mock LINE API Client
   - 測試成功發送通知
   - 測試失敗處理（記錄錯誤）
 
-- [ ] T066 [P] [US4] 通知整合測試（需實際 LINE Channel）
+- [x] T066 [P] [US4] 通知整合測試（需實際 LINE Channel）
   - 建立測試紀錄
   - 驗證 LINE 通知實際發送
   - 驗證 NotificationLog 記錄正確

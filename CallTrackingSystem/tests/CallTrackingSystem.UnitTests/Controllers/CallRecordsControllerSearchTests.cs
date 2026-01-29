@@ -56,6 +56,8 @@ public class CallRecordsControllerSearchTests
         var inquiryRepo = new Mock<IInquirySystemRepository>();
         var handlerRepo = new Mock<IHandlerRepository>();
         var changeHistoryRepo = new Mock<IChangeHistoryRepository>();
+        var lineNotificationService = new Mock<ILineNotificationService>();
+        var notificationLogService = new Mock<INotificationLogService>();
 
         var system = InquirySystem.Create("帳務系統");
         var record = CallRecord.Create("帳務異常", "內容", 1, UrgencyLevel.High, "張三", "0912", "user-1");
@@ -75,6 +77,8 @@ public class CallRecordsControllerSearchTests
             callRecordRepo.Object,
             inquiryRepo.Object,
             handlerRepo.Object,
-            changeHistoryRepo.Object);
+            changeHistoryRepo.Object,
+            lineNotificationService.Object,
+            notificationLogService.Object);
     }
 }

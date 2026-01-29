@@ -98,3 +98,24 @@ public interface IChangeHistoryRepository
     /// </summary>
     Task AddRangeAsync(IEnumerable<ChangeHistory> histories, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// 通知記錄 Repository 介面
+/// </summary>
+public interface INotificationLogRepository
+{
+    /// <summary>
+    /// 取得指定來電紀錄的通知記錄
+    /// </summary>
+    Task<List<NotificationLog>> GetByCallRecordIdAsync(int callRecordId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 取得失敗的通知記錄
+    /// </summary>
+    Task<List<NotificationLog>> GetFailedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 新增通知記錄
+    /// </summary>
+    Task AddAsync(NotificationLog log, CancellationToken cancellationToken = default);
+}

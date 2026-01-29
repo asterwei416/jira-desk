@@ -1,5 +1,6 @@
 using CallTrackingSystem.Core.Entities;
 using CallTrackingSystem.Core.Enums;
+using CallTrackingSystem.Core.Interfaces;
 using CallTrackingSystem.Core.Services;
 using CallTrackingSystem.Infrastructure.Data;
 using CallTrackingSystem.Infrastructure.Repositories;
@@ -17,6 +18,8 @@ public class CallRecordStatusUpdateTests
         var inquiryRepository = new InquirySystemRepository(context);
         var handlerRepository = new HandlerRepository(context);
         var changeHistoryRepository = new ChangeHistoryRepository(context);
+        var notificationLogRepository = new NotificationLogRepository(context);
+        var notificationLogService = new NotificationLogService(notificationLogRepository);
 
         var inquirySystem = InquirySystem.Create("帳務系統");
         context.InquirySystems.Add(inquirySystem);
@@ -31,7 +34,9 @@ public class CallRecordStatusUpdateTests
             callRecordRepository,
             inquiryRepository,
             handlerRepository,
-            changeHistoryRepository);
+            changeHistoryRepository,
+            new FakeLineNotificationService(),
+            notificationLogService);
 
         var updated = await service.UpdateStatusAsync(record.Id, ProcessStatus.Completed, "user-2");
 
@@ -51,5 +56,13 @@ public class CallRecordStatusUpdateTests
             .Options;
 
         return new ApplicationDbContext(options);
+    }
+
+    private sealed class FakeLineNotificationService : ILineNotificationService
+    {
+        public Task SendCallRecordNotificationAsync(CallRecord callRecord, IReadOnlyCollection<string> lineUserIds, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

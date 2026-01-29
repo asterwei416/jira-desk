@@ -249,3 +249,35 @@ public class ChangeHistoryRepository : IChangeHistoryRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 }
+
+public class NotificationLogRepository : INotificationLogRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public NotificationLogRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<NotificationLog>> GetByCallRecordIdAsync(int callRecordId, CancellationToken cancellationToken = default)
+    {
+        return await _context.NotificationLogs
+            .Where(x => x.CallRecordId == callRecordId)
+            .OrderByDescending(x => x.SentAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<NotificationLog>> GetFailedAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.NotificationLogs
+            .Where(x => !x.Success)
+            .OrderByDescending(x => x.SentAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(NotificationLog log, CancellationToken cancellationToken = default)
+    {
+        _context.NotificationLogs.Add(log);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}

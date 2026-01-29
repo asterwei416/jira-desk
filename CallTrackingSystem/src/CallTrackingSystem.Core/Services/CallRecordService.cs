@@ -18,17 +18,23 @@ public class CallRecordService
     private readonly IInquirySystemRepository _inquirySystemRepository;
     private readonly IHandlerRepository _handlerRepository;
     private readonly IChangeHistoryRepository _changeHistoryRepository;
+    private readonly ILineNotificationService _lineNotificationService;
+    private readonly INotificationLogService _notificationLogService;
 
     public CallRecordService(
         ICallRecordRepository callRecordRepository,
         IInquirySystemRepository inquirySystemRepository,
         IHandlerRepository handlerRepository,
-        IChangeHistoryRepository changeHistoryRepository)
+        IChangeHistoryRepository changeHistoryRepository,
+        ILineNotificationService lineNotificationService,
+        INotificationLogService notificationLogService)
     {
         _callRecordRepository = callRecordRepository;
         _inquirySystemRepository = inquirySystemRepository;
         _handlerRepository = handlerRepository;
         _changeHistoryRepository = changeHistoryRepository;
+        _lineNotificationService = lineNotificationService;
+        _notificationLogService = notificationLogService;
     }
 
     /// <summary>
@@ -64,11 +70,40 @@ public class CallRecordService
             callRecord.FaqReference = request.FaqReference;
         }
 
+        // 自動指派處理人員
+        var handlers = await _handlerRepository.GetHandlersByInquirySystemIdAsync(
+            request.InquirySystemId,
+            cancellationToken);
+
+        callRecord.Handlers = handlers;
+
         // 儲存
         var created = await _callRecordRepository.AddAsync(callRecord, cancellationToken);
 
         // 取得完整資料（含關聯）
         var result = await _callRecordRepository.GetByIdAsync(created.Id, cancellationToken);
+
+        // 發送 LINE 通知（失敗不阻斷）
+        var lineUserIds = handlers
+            .Where(h => !string.IsNullOrWhiteSpace(h.LineUserId))
+            .Select(h => h.LineUserId!)
+            .Distinct()
+            .ToList();
+
+        if (lineUserIds.Count > 0)
+        {
+            try
+            {
+                await _lineNotificationService.SendCallRecordNotificationAsync(
+                    result!,
+                    lineUserIds,
+                    cancellationToken);
+            }
+            catch (Exception)
+            {
+                // 通知失敗已由服務記錄，不影響主流程
+            }
+        }
         
         return MapToResponse(result!);
     }
@@ -217,6 +252,29 @@ public class CallRecordService
                 ChangedByUserId = h.ChangedByUserId
             }).ToList()
         };
+    }
+
+    /// <summary>
+    /// 查詢通知記錄
+    /// </summary>
+    public async Task<List<NotificationLogItemDto>> GetNotificationLogsAsync(
+        int callRecordId,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(callRecordId, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        var logs = await _notificationLogService.GetByCallRecordIdAsync(callRecordId, cancellationToken);
+        return logs.Select(l => new NotificationLogItemDto
+        {
+            LineUserId = l.LineUserId,
+            Success = l.Success,
+            ErrorMessage = l.ErrorMessage,
+            SentAt = l.SentAt
+        }).ToList();
     }
 
     /// <summary>

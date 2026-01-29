@@ -380,6 +380,33 @@ public class CallRecordsController : ControllerBase
     }
 
     /// <summary>
+    /// 查詢通知記錄
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>通知記錄清單</returns>
+    /// <response code="200">查詢成功</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    [HttpGet("{id}/notifications")]
+    [ProducesResponseType(typeof(List<NotificationLogItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetNotifications(
+        [FromRoute] int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await _callRecordService.GetNotificationLogsAsync(id, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// 更新處理人員
     /// </summary>
     /// <param name="id">來電紀錄 ID</param>
