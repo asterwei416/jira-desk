@@ -23,6 +23,14 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// 開發環境自動初始化資料庫
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    DbInitializer.Initialize(context);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
