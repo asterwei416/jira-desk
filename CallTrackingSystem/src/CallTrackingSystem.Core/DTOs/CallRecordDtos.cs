@@ -172,3 +172,33 @@ public record PagedResult<T>
     public bool HasPreviousPage => PageNumber > 1;
     public bool HasNextPage => PageNumber < TotalPages;
 }
+
+/// <summary>
+/// Excel 報表匯出請求 DTO
+/// </summary>
+public record ExcelReportRequest
+{
+    public string? Keyword { get; init; }
+    public int? InquirySystemId { get; init; }
+    public string? Status { get; init; }
+    public string? UrgencyLevel { get; init; }
+    public DateTime? StartDate { get; init; }
+    public DateTime? EndDate { get; init; }
+    /// <summary>
+    /// 報表月份 (yyyy/MM) - 與 StartDate/EndDate 互斥
+    /// </summary>
+    public string? ReportMonth { get; init; }
+}
+
+/// <summary>
+/// 搜尋條件（供資料查詢使用）
+/// </summary>
+public record CallRecordSearchCriteria
+{
+    public string? Keyword { get; init; }
+    public int? InquirySystemId { get; init; }
+    public ProcessStatus? Status { get; init; }
+    public UrgencyLevel? UrgencyLevel { get; init; }
+    public DateTime? StartDateUtc { get; init; }
+    public DateTime? EndDateUtc { get; init; }
+}

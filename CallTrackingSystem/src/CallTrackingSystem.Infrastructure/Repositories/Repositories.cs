@@ -60,6 +60,53 @@ public class CallRecordRepository : ICallRecordRepository
         return (items, totalCount);
     }
 
+    public async Task<List<CallRecord>> SearchAsync(
+        CallTrackingSystem.Core.DTOs.CallRecordSearchCriteria criteria,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.CallRecords
+            .Include(x => x.InquirySystem)
+            .Include(x => x.Handlers)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(criteria.Keyword))
+        {
+            var keyword = criteria.Keyword.Trim();
+            query = query.Where(x => x.Subject.Contains(keyword) ||
+                                     x.Content.Contains(keyword) ||
+                                     x.ContactName.Contains(keyword));
+        }
+
+        if (criteria.InquirySystemId.HasValue)
+        {
+            query = query.Where(x => x.InquirySystemId == criteria.InquirySystemId.Value);
+        }
+
+        if (criteria.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == criteria.Status.Value);
+        }
+
+        if (criteria.UrgencyLevel.HasValue)
+        {
+            query = query.Where(x => x.UrgencyLevel == criteria.UrgencyLevel.Value);
+        }
+
+        if (criteria.StartDateUtc.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt >= criteria.StartDateUtc.Value);
+        }
+
+        if (criteria.EndDateUtc.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt <= criteria.EndDateUtc.Value);
+        }
+
+        return await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<CallRecord> AddAsync(CallRecord callRecord, CancellationToken cancellationToken = default)
     {
         _context.CallRecords.Add(callRecord);

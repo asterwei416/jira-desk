@@ -1,6 +1,8 @@
 using CallTrackingSystem.Core.DTOs;
 using CallTrackingSystem.Core.Entities;
+using CallTrackingSystem.Core.Enums;
 using CallTrackingSystem.Core.Interfaces;
+using ClosedXML.Excel;
 
 namespace CallTrackingSystem.Core.Services;
 
@@ -10,6 +12,8 @@ namespace CallTrackingSystem.Core.Services;
 public class CallRecordService
 {
     private const int DefaultLockTimeoutMinutes = 30;
+    private const int ExportLimit = 5000;
+    private static readonly TimeZoneInfo TaipeiTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Taipei Standard Time");
     private readonly ICallRecordRepository _callRecordRepository;
     private readonly IInquirySystemRepository _inquirySystemRepository;
     private readonly IHandlerRepository _handlerRepository;
@@ -252,6 +256,32 @@ public class CallRecordService
         }).ToList();
     }
 
+    /// <summary>
+    /// 匯出 Excel 報表
+    /// </summary>
+    public async Task<byte[]> ExportExcelAsync(
+        ExcelReportRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var criteria = BuildSearchCriteria(request);
+        var records = await _callRecordRepository.SearchAsync(criteria, cancellationToken);
+
+        if (records.Count > ExportLimit)
+        {
+            throw new InvalidOperationException($"匯出筆數超過限制 {ExportLimit} 筆，請縮小篩選範圍");
+        }
+
+        using var workbook = new XLWorkbook();
+
+        BuildFilterSheet(workbook, request, records.Count);
+        BuildDetailSheet(workbook, records);
+        BuildSummarySheet(workbook, records);
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
+
     // 私有輔助方法
     private static CallRecordResponse MapToResponse(CallRecord callRecord)
     {
@@ -298,6 +328,201 @@ public class CallRecordService
             InquirySystemName = callRecord.InquirySystem.Name,
             HandlerCount = callRecord.Handlers.Count
         };
+    }
+
+    private static CallRecordSearchCriteria BuildSearchCriteria(ExcelReportRequest request)
+    {
+        if (!string.IsNullOrWhiteSpace(request.ReportMonth) &&
+            (request.StartDate.HasValue || request.EndDate.HasValue))
+        {
+            throw new InvalidOperationException("reportMonth 與 startDate/endDate 不可同時使用");
+        }
+
+        DateTime? startUtc = null;
+        DateTime? endUtc = null;
+
+        if (!string.IsNullOrWhiteSpace(request.ReportMonth))
+        {
+            var parts = request.ReportMonth.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 2 || !int.TryParse(parts[0], out var year) || !int.TryParse(parts[1], out var month))
+            {
+                throw new InvalidOperationException("reportMonth 格式必須為 yyyy/MM");
+            }
+
+            var startLocal = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Unspecified);
+            var endLocal = startLocal.AddMonths(1).AddTicks(-1);
+            startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, TaipeiTimeZone);
+            endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, TaipeiTimeZone);
+        }
+        else
+        {
+            if (request.StartDate.HasValue)
+            {
+                var startLocal = request.StartDate.Value.Date;
+                startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, TaipeiTimeZone);
+            }
+
+            if (request.EndDate.HasValue)
+            {
+                var endLocal = request.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+                endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, TaipeiTimeZone);
+            }
+        }
+
+        return new CallRecordSearchCriteria
+        {
+            Keyword = request.Keyword?.Trim(),
+            InquirySystemId = request.InquirySystemId,
+            Status = ParseEnum<ProcessStatus>(request.Status),
+            UrgencyLevel = ParseEnum<UrgencyLevel>(request.UrgencyLevel),
+            StartDateUtc = startUtc,
+            EndDateUtc = endUtc
+        };
+    }
+
+    private static TEnum? ParseEnum<TEnum>(string? value) where TEnum : struct
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (Enum.TryParse<TEnum>(value, ignoreCase: true, out var result))
+        {
+            return result;
+        }
+
+        throw new InvalidOperationException($"無效的參數值: {value}");
+    }
+
+    private static void BuildFilterSheet(XLWorkbook workbook, ExcelReportRequest request, int totalCount)
+    {
+        var ws = workbook.Worksheets.Add("篩選條件");
+        ws.Cell(1, 1).Value = "條件";
+        ws.Cell(1, 2).Value = "值";
+
+        var row = 2;
+        ws.Cell(row, 1).Value = "關鍵字";
+        ws.Cell(row++, 2).Value = request.Keyword ?? "(無)";
+
+        ws.Cell(row, 1).Value = "詢問系統";
+        ws.Cell(row++, 2).Value = request.InquirySystemId?.ToString() ?? "(全部)";
+
+        ws.Cell(row, 1).Value = "處理狀態";
+        ws.Cell(row++, 2).Value = request.Status ?? "(全部)";
+
+        ws.Cell(row, 1).Value = "緊急程度";
+        ws.Cell(row++, 2).Value = request.UrgencyLevel ?? "(全部)";
+
+        ws.Cell(row, 1).Value = "開始日期";
+        ws.Cell(row++, 2).Value = request.StartDate?.ToString("yyyy/MM/dd") ?? "(無)";
+
+        ws.Cell(row, 1).Value = "結束日期";
+        ws.Cell(row++, 2).Value = request.EndDate?.ToString("yyyy/MM/dd") ?? "(無)";
+
+        ws.Cell(row, 1).Value = "報表月份";
+        ws.Cell(row++, 2).Value = request.ReportMonth ?? "(無)";
+
+        ws.Cell(row, 1).Value = "總筆數";
+        ws.Cell(row, 2).Value = totalCount;
+
+        ws.Columns().AdjustToContents();
+    }
+
+    private static void BuildDetailSheet(XLWorkbook workbook, List<CallRecord> records)
+    {
+        var ws = workbook.Worksheets.Add("明細");
+        var headers = new[]
+        {
+            "來電日期", "詢問系統", "主旨", "緊急度", "處理狀態",
+            "處理人員", "聯絡人", "連絡電話", "最後更新時間",
+            "內容", "參考 FAQ"
+        };
+
+        for (var i = 0; i < headers.Length; i++)
+        {
+            ws.Cell(1, i + 1).Value = headers[i];
+        }
+
+        var row = 2;
+        foreach (var record in records)
+        {
+            var createdLocal = TimeZoneInfo.ConvertTimeFromUtc(record.CreatedAt, TaipeiTimeZone);
+            var updatedLocal = TimeZoneInfo.ConvertTimeFromUtc(record.UpdatedAt, TaipeiTimeZone);
+
+            ws.Cell(row, 1).Value = createdLocal;
+            ws.Cell(row, 1).Style.DateFormat.Format = "yyyy/MM/dd HH:mm";
+            ws.Cell(row, 2).Value = record.InquirySystem.Name;
+            ws.Cell(row, 3).Value = record.Subject;
+            ws.Cell(row, 4).Value = record.UrgencyLevel.ToString();
+            ws.Cell(row, 5).Value = record.Status.ToString();
+            ws.Cell(row, 6).Value = record.Handlers.Count == 0
+                ? "(未指派)"
+                : string.Join(", ", record.Handlers.Select(h => h.Name));
+            ws.Cell(row, 7).Value = record.ContactName;
+            ws.Cell(row, 8).Value = record.ContactPhone;
+            ws.Cell(row, 9).Value = updatedLocal;
+            ws.Cell(row, 9).Style.DateFormat.Format = "yyyy/MM/dd HH:mm";
+            ws.Cell(row, 10).Value = record.Content;
+            ws.Cell(row, 11).Value = record.FaqReference ?? string.Empty;
+
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+        ws.SheetView.FreezeRows(1);
+    }
+
+    private static void BuildSummarySheet(XLWorkbook workbook, List<CallRecord> records)
+    {
+        var ws = workbook.Worksheets.Add("彙總");
+        ws.Cell(1, 1).Value = "月份";
+        ws.Cell(1, 2).Value = "詢問系統";
+        ws.Cell(1, 3).Value = "處理人員";
+        ws.Cell(1, 4).Value = "筆數";
+
+        var row = 2;
+
+        var summary = records
+            .SelectMany(record =>
+            {
+                var month = TimeZoneInfo.ConvertTimeFromUtc(record.CreatedAt, TaipeiTimeZone)
+                    .ToString("yyyy/MM");
+                var handlers = record.Handlers.Count == 0
+                    ? new[] { "(未指派)" }
+                    : record.Handlers.Select(h => h.Name);
+
+                return handlers.Select(handler => new
+                {
+                    Month = month,
+                    InquirySystem = record.InquirySystem.Name,
+                    Handler = handler
+                });
+            })
+            .GroupBy(x => new { x.Month, x.InquirySystem, x.Handler })
+            .Select(g => new
+            {
+                g.Key.Month,
+                g.Key.InquirySystem,
+                g.Key.Handler,
+                Count = g.Count()
+            })
+            .OrderBy(x => x.Month)
+            .ThenBy(x => x.InquirySystem)
+            .ThenBy(x => x.Handler)
+            .ToList();
+
+        foreach (var item in summary)
+        {
+            ws.Cell(row, 1).Value = item.Month;
+            ws.Cell(row, 2).Value = item.InquirySystem;
+            ws.Cell(row, 3).Value = item.Handler;
+            ws.Cell(row, 4).Value = item.Count;
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+        ws.SheetView.FreezeRows(1);
     }
 
     private static bool IsLocked(CallRecord callRecord, int lockTimeoutMinutes)

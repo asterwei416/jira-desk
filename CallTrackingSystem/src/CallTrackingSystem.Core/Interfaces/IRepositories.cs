@@ -21,6 +21,13 @@ public interface ICallRecordRepository
         string? searchKeyword = null,
         int? inquirySystemId = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 依條件搜尋來電紀錄（供報表匯出）
+    /// </summary>
+    Task<List<CallRecord>> SearchAsync(
+        CallTrackingSystem.Core.DTOs.CallRecordSearchCriteria criteria,
+        CancellationToken cancellationToken = default);
     
     /// <summary>
     /// 新增來電紀錄
