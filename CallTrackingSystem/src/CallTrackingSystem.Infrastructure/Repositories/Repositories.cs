@@ -176,3 +176,33 @@ public class HandlerRepository : IHandlerRepository
             .ToListAsync(cancellationToken);
     }
 }
+
+public class ChangeHistoryRepository : IChangeHistoryRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public ChangeHistoryRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<ChangeHistory>> GetByCallRecordIdAsync(int callRecordId, CancellationToken cancellationToken = default)
+    {
+        return await _context.ChangeHistories
+            .Where(x => x.CallRecordId == callRecordId)
+            .OrderByDescending(x => x.ChangedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddRangeAsync(IEnumerable<ChangeHistory> histories, CancellationToken cancellationToken = default)
+    {
+        var list = histories.ToList();
+        if (list.Count == 0)
+        {
+            return;
+        }
+
+        await _context.ChangeHistories.AddRangeAsync(list, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}

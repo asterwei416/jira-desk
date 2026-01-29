@@ -76,3 +76,19 @@ public interface IHandlerRepository
     /// </summary>
     Task<List<Handler>> GetHandlersByInquirySystemIdAsync(int inquirySystemId, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// 變更歷史 Repository 介面
+/// </summary>
+public interface IChangeHistoryRepository
+{
+    /// <summary>
+    /// 取得指定來電紀錄的變更歷史
+    /// </summary>
+    Task<List<ChangeHistory>> GetByCallRecordIdAsync(int callRecordId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 新增變更歷史
+    /// </summary>
+    Task AddRangeAsync(IEnumerable<ChangeHistory> histories, CancellationToken cancellationToken = default);
+}

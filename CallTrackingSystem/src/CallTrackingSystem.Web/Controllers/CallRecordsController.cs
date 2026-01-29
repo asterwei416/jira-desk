@@ -312,4 +312,78 @@ public class CallRecordsController : ControllerBase
             return StatusCode(500, new { error = "刪除來電紀錄時發生錯誤" });
         }
     }
+
+    /// <summary>
+    /// 更新處理狀態
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="request">狀態更新資料</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>更新後的來電紀錄</returns>
+    /// <response code="200">成功更新狀態</response>
+    /// <response code="400">狀態值無效</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(CallRecordResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateStatus(
+        [FromRoute] int id,
+        [FromBody] UpdateStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // TODO: 從 JWT Token 取得使用者 ID，目前使用測試值
+            var userId = "test-user-001";
+
+            if (!Enum.TryParse<ProcessStatus>(request.Status, true, out var status))
+            {
+                return BadRequest(new { error = "狀態值無效" });
+            }
+
+            var result = await _callRecordService.UpdateStatusAsync(id, status, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// 查詢變更歷史
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>變更歷史清單</returns>
+    /// <response code="200">查詢成功</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    [HttpGet("{id}/change-history")]
+    [ProducesResponseType(typeof(ChangeHistoryResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetChangeHistory(
+        [FromRoute] int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await _callRecordService.GetChangeHistoryAsync(id, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+    }
+}
+
+/// <summary>
+/// 更新狀態請求 DTO
+/// </summary>
+public record UpdateStatusRequest
+{
+    public required string Status { get; init; }
 }

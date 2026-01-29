@@ -17,15 +17,18 @@ public class CallRecordService
     private readonly ICallRecordRepository _callRecordRepository;
     private readonly IInquirySystemRepository _inquirySystemRepository;
     private readonly IHandlerRepository _handlerRepository;
+    private readonly IChangeHistoryRepository _changeHistoryRepository;
 
     public CallRecordService(
         ICallRecordRepository callRecordRepository,
         IInquirySystemRepository inquirySystemRepository,
-        IHandlerRepository handlerRepository)
+        IHandlerRepository handlerRepository,
+        IChangeHistoryRepository changeHistoryRepository)
     {
         _callRecordRepository = callRecordRepository;
         _inquirySystemRepository = inquirySystemRepository;
         _handlerRepository = handlerRepository;
+        _changeHistoryRepository = changeHistoryRepository;
     }
 
     /// <summary>
@@ -133,6 +136,7 @@ public class CallRecordService
         }
 
         // 更新資料
+        var histories = BuildChangeHistories(callRecord, request, userId);
         callRecord.Update(
             request.Subject,
             request.Content,
@@ -143,8 +147,76 @@ public class CallRecordService
 
         await _callRecordRepository.UpdateAsync(callRecord, cancellationToken);
 
+        if (histories.Count > 0)
+        {
+            await _changeHistoryRepository.AddRangeAsync(histories, cancellationToken);
+        }
+
         var updated = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
         return MapToResponse(updated!);
+    }
+
+    /// <summary>
+    /// 更新處理狀態並記錄變更歷史
+    /// </summary>
+    public async Task<CallRecordResponse> UpdateStatusAsync(
+        int id,
+        ProcessStatus newStatus,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        var oldStatus = callRecord.Status;
+        if (oldStatus != newStatus)
+        {
+            callRecord.UpdateStatus(newStatus, userId);
+            await _callRecordRepository.UpdateAsync(callRecord, cancellationToken);
+
+            var history = ChangeHistory.Create(
+                callRecord.Id,
+                "Status",
+                oldStatus.ToString(),
+                newStatus.ToString(),
+                userId);
+
+            await _changeHistoryRepository.AddRangeAsync(new[] { history }, cancellationToken);
+        }
+
+        var updated = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        return MapToResponse(updated!);
+    }
+
+    /// <summary>
+    /// 取得變更歷史
+    /// </summary>
+    public async Task<ChangeHistoryResponse> GetChangeHistoryAsync(
+        int callRecordId,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(callRecordId, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        var histories = await _changeHistoryRepository.GetByCallRecordIdAsync(callRecordId, cancellationToken);
+        return new ChangeHistoryResponse
+        {
+            CallRecordId = callRecordId,
+            Changes = histories.Select(h => new ChangeHistoryItemDto
+            {
+                FieldName = h.FieldName,
+                OldValue = h.OldValue,
+                NewValue = h.NewValue,
+                ChangedAt = h.ChangedAt,
+                ChangedByUserId = h.ChangedByUserId
+            }).ToList()
+        };
     }
 
     /// <summary>
@@ -533,5 +605,41 @@ public class CallRecordService
         }
 
         return DateTime.UtcNow <= callRecord.LockedAt.Value.AddMinutes(lockTimeoutMinutes);
+    }
+
+    private static List<ChangeHistory> BuildChangeHistories(
+        CallRecord callRecord,
+        UpdateCallRecordRequest request,
+        string userId)
+    {
+        var histories = new List<ChangeHistory>();
+
+        AddHistoryIfChanged(histories, callRecord.Id, "Subject", callRecord.Subject, request.Subject, userId);
+        AddHistoryIfChanged(histories, callRecord.Id, "Content", callRecord.Content, request.Content, userId);
+        AddHistoryIfChanged(histories, callRecord.Id, "UrgencyLevel", callRecord.UrgencyLevel.ToString(), request.UrgencyLevel.ToString(), userId);
+        AddHistoryIfChanged(histories, callRecord.Id, "ContactName", callRecord.ContactName, request.ContactName, userId);
+        AddHistoryIfChanged(histories, callRecord.Id, "ContactPhone", callRecord.ContactPhone, request.ContactPhone, userId);
+        AddHistoryIfChanged(histories, callRecord.Id, "FaqReference", callRecord.FaqReference, request.FaqReference, userId);
+
+        return histories;
+    }
+
+    private static void AddHistoryIfChanged(
+        List<ChangeHistory> histories,
+        int callRecordId,
+        string fieldName,
+        string? oldValue,
+        string? newValue,
+        string userId)
+    {
+        var oldNormalized = oldValue?.Trim();
+        var newNormalized = newValue?.Trim();
+
+        if (string.Equals(oldNormalized, newNormalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        histories.Add(ChangeHistory.Create(callRecordId, fieldName, oldNormalized, newNormalized, userId));
     }
 }

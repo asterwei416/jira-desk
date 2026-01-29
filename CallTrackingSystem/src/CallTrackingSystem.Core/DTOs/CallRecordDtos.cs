@@ -140,6 +140,27 @@ public record CallRecordLockResponse
 }
 
 /// <summary>
+/// 變更歷史項目 DTO
+/// </summary>
+public record ChangeHistoryItemDto
+{
+    public required string FieldName { get; init; }
+    public string? OldValue { get; init; }
+    public string? NewValue { get; init; }
+    public required DateTime ChangedAt { get; init; }
+    public required string ChangedByUserId { get; init; }
+}
+
+/// <summary>
+/// 變更歷史回應 DTO
+/// </summary>
+public record ChangeHistoryResponse
+{
+    public required int CallRecordId { get; init; }
+    public required List<ChangeHistoryItemDto> Changes { get; init; }
+}
+
+/// <summary>
 /// 詢問系統 DTO
 /// </summary>
 public record InquirySystemDto

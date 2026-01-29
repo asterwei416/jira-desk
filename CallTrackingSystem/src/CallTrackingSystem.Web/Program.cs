@@ -38,6 +38,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ICallRecordRepository, CallRecordRepository>();
 builder.Services.AddScoped<IInquirySystemRepository, InquirySystemRepository>();
 builder.Services.AddScoped<IHandlerRepository, HandlerRepository>();
+builder.Services.AddScoped<IChangeHistoryRepository, ChangeHistoryRepository>();
 
 // 註冊 Services
 builder.Services.AddScoped<CallRecordService>();
