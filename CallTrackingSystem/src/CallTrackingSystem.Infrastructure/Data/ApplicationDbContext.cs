@@ -1,3 +1,4 @@
+using CallTrackingSystem.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CallTrackingSystem.Infrastructure.Data;
@@ -12,11 +13,20 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    // DbSet 屬性
+    public DbSet<CallRecord> CallRecords => Set<CallRecord>();
+    public DbSet<InquirySystem> InquirySystems => Set<InquirySystem>();
+    public DbSet<Handler> Handlers => Set<Handler>();
+    public DbSet<HandlerMapping> HandlerMappings => Set<HandlerMapping>();
+    public DbSet<ChangeHistory> ChangeHistories => Set<ChangeHistory>();
+    public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
+    public DbSet<User> Users => Set<User>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         
-        // 將在 Phase 2 套用所有 IEntityTypeConfiguration
-        // modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        // 自動套用所有 IEntityTypeConfiguration
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }
