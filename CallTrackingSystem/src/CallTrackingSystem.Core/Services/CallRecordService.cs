@@ -9,6 +9,7 @@ namespace CallTrackingSystem.Core.Services;
 /// </summary>
 public class CallRecordService
 {
+    private const int DefaultLockTimeoutMinutes = 30;
     private readonly ICallRecordRepository _callRecordRepository;
     private readonly IInquirySystemRepository _inquirySystemRepository;
     private readonly IHandlerRepository _handlerRepository;
@@ -143,6 +144,84 @@ public class CallRecordService
     }
 
     /// <summary>
+    /// 取得編輯鎖定狀態
+    /// </summary>
+    public async Task<CallRecordLockStatusResponse> GetLockStatusAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        var isLocked = IsLocked(callRecord, DefaultLockTimeoutMinutes);
+
+        return new CallRecordLockStatusResponse
+        {
+            IsLocked = isLocked,
+            LockedByUserId = isLocked ? callRecord.LockedByUserId : null,
+            LockedAt = isLocked ? callRecord.LockedAt : null
+        };
+    }
+
+    /// <summary>
+    /// 取得編輯鎖定
+    /// </summary>
+    public async Task<CallRecordLockResponse> AcquireLockAsync(
+        int id,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        var acquired = callRecord.TryAcquireLock(userId, DefaultLockTimeoutMinutes);
+        await _callRecordRepository.UpdateAsync(callRecord, cancellationToken);
+
+        var isLocked = IsLocked(callRecord, DefaultLockTimeoutMinutes);
+
+        return new CallRecordLockResponse
+        {
+            Acquired = acquired,
+            IsLocked = isLocked,
+            LockedByUserId = isLocked ? callRecord.LockedByUserId : null,
+            LockedAt = isLocked ? callRecord.LockedAt : null
+        };
+    }
+
+    /// <summary>
+    /// 釋放編輯鎖定
+    /// </summary>
+    public async Task<CallRecordLockStatusResponse> ReleaseLockAsync(
+        int id,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        callRecord.ReleaseLock(userId);
+        await _callRecordRepository.UpdateAsync(callRecord, cancellationToken);
+
+        var isLocked = IsLocked(callRecord, DefaultLockTimeoutMinutes);
+
+        return new CallRecordLockStatusResponse
+        {
+            IsLocked = isLocked,
+            LockedByUserId = isLocked ? callRecord.LockedByUserId : null,
+            LockedAt = isLocked ? callRecord.LockedAt : null
+        };
+    }
+
+    /// <summary>
     /// 刪除來電紀錄
     /// </summary>
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -219,5 +298,15 @@ public class CallRecordService
             InquirySystemName = callRecord.InquirySystem.Name,
             HandlerCount = callRecord.Handlers.Count
         };
+    }
+
+    private static bool IsLocked(CallRecord callRecord, int lockTimeoutMinutes)
+    {
+        if (callRecord.LockedByUserId == null || !callRecord.LockedAt.HasValue)
+        {
+            return false;
+        }
+
+        return DateTime.UtcNow <= callRecord.LockedAt.Value.AddMinutes(lockTimeoutMinutes);
     }
 }

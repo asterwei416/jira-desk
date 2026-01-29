@@ -119,6 +119,27 @@ public record CallRecordListItemResponse
 }
 
 /// <summary>
+/// 編輯鎖定狀態 DTO
+/// </summary>
+public record CallRecordLockStatusResponse
+{
+    public required bool IsLocked { get; init; }
+    public string? LockedByUserId { get; init; }
+    public DateTime? LockedAt { get; init; }
+}
+
+/// <summary>
+/// 編輯鎖定操作結果 DTO
+/// </summary>
+public record CallRecordLockResponse
+{
+    public required bool Acquired { get; init; }
+    public required bool IsLocked { get; init; }
+    public string? LockedByUserId { get; init; }
+    public DateTime? LockedAt { get; init; }
+}
+
+/// <summary>
 /// 詢問系統 DTO
 /// </summary>
 public record InquirySystemDto

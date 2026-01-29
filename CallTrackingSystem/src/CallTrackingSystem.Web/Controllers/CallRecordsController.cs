@@ -184,6 +184,101 @@ public class CallRecordsController : ControllerBase
     }
 
     /// <summary>
+    /// 取得編輯鎖定狀態
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>鎖定狀態</returns>
+    /// <response code="200">成功取得鎖定狀態</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    [HttpGet("{id}/lock")]
+    [ProducesResponseType(typeof(CallRecordLockStatusResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLockStatus(
+        [FromRoute] int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await _callRecordService.GetLockStatusAsync(id, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// 取得編輯鎖定
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>鎖定結果</returns>
+    /// <response code="200">成功取得鎖定或已由自己鎖定</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    /// <response code="409">紀錄正被其他使用者編輯中</response>
+    [HttpPost("{id}/lock")]
+    [ProducesResponseType(typeof(CallRecordLockResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AcquireLock(
+        [FromRoute] int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // TODO: 從 JWT Token 取得使用者 ID，目前使用測試值
+            var userId = "test-user-001";
+
+            var result = await _callRecordService.AcquireLockAsync(id, userId, cancellationToken);
+
+            if (!result.Acquired && result.IsLocked)
+            {
+                return Conflict(new { error = $"此紀錄正被其他使用者編輯中（鎖定者: {result.LockedByUserId}）" });
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// 釋放編輯鎖定
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>鎖定狀態</returns>
+    /// <response code="200">成功釋放鎖定</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    [HttpDelete("{id}/lock")]
+    [ProducesResponseType(typeof(CallRecordLockStatusResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReleaseLock(
+        [FromRoute] int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // TODO: 從 JWT Token 取得使用者 ID，目前使用測試值
+            var userId = "test-user-001";
+
+            var result = await _callRecordService.ReleaseLockAsync(id, userId, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// 刪除來電紀錄
     /// </summary>
     /// <param name="id">來電紀錄 ID</param>
