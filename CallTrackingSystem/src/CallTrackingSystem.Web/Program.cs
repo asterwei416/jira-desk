@@ -47,6 +47,7 @@ builder.Services.AddScoped<CallRecordService>();
 builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
 builder.Services.AddScoped<INotificationLogService, NotificationLogService>();
 builder.Services.AddScoped<ILineNotificationService, CallTrackingSystem.Infrastructure.Services.LineNotificationService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 // 註冊健康檢查
 builder.Services.AddHealthChecks()
