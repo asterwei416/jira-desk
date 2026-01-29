@@ -9,7 +9,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers()
+builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
     {
         // 設定 JSON 序列化選項
@@ -42,6 +42,7 @@ builder.Services.AddScoped<IChangeHistoryRepository, ChangeHistoryRepository>();
 
 // 註冊 Services
 builder.Services.AddScoped<CallRecordService>();
+builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
 
 // 註冊健康檢查
 builder.Services.AddHealthChecks()
@@ -60,9 +61,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // 啟用 Controllers
 app.MapControllers();
+
+// MVC 頁面路由
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=CallRecord}/{action=Index}/{id?}");
 
 // 健康檢查端點
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions

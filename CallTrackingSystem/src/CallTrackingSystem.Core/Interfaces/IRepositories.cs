@@ -16,10 +16,11 @@ public interface ICallRecordRepository
     /// 取得分頁來電紀錄列表
     /// </summary>
     Task<(List<CallRecord> Items, int TotalCount)> GetPagedAsync(
+        CallTrackingSystem.Core.DTOs.CallRecordSearchCriteria criteria,
         int pageNumber,
         int pageSize,
-        string? searchKeyword = null,
-        int? inquirySystemId = null,
+        string sortBy,
+        string sortOrder,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -75,6 +76,11 @@ public interface IHandlerRepository
     /// 根據詢問系統 ID 取得對應的處理人員
     /// </summary>
     Task<List<Handler>> GetHandlersByInquirySystemIdAsync(int inquirySystemId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根據處理人員 ID 清單取得處理人員
+    /// </summary>
+    Task<List<Handler>> GetByIdsAsync(IReadOnlyCollection<int> handlerIds, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

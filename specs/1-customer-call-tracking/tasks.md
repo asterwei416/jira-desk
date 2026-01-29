@@ -28,28 +28,28 @@
 
 ### 任務清單
 
-- [ ] T001 建立 Solution 和專案結構
+- [x] T001 建立 Solution 和專案結構
   - 建立 `CallTrackingSystem.sln`
   - 建立專案: `CallTrackingSystem.Web`, `CallTrackingSystem.Core`, `CallTrackingSystem.Infrastructure`
   - 建立測試專案: `CallTrackingSystem.UnitTests`, `CallTrackingSystem.IntegrationTests`
   - 設定專案間參考關係（Web → Core + Infrastructure, Infrastructure → Core）
 
-- [ ] T002 [P] 設定 NuGet 套件
+- [x] T002 [P] 設定 NuGet 套件
   - Web: `Microsoft.AspNetCore.App`, `Microsoft.AspNetCore.Authentication.JwtBearer`
   - Infrastructure: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Tools`, `LineDC.Messaging`
   - 測試: `xUnit`, `Moq`, `FluentAssertions`, `Microsoft.EntityFrameworkCore.InMemory`
 
-- [ ] T003 [P] 建立 appsettings 設定檔案
+- [x] T003 [P] 建立 appsettings 設定檔案
   - 建立 `appsettings.json` 和 `appsettings.Development.json` 在 Web 專案
   - 設定連線字串範本
   - 設定 JWT、LINE API、日誌層級配置項
 
-- [ ] T004 建立 ApplicationDbContext 基礎
+- [x] T004 建立 ApplicationDbContext 基礎
   - 在 `Infrastructure/Data/ApplicationDbContext.cs` 建立 DbContext 類別
   - 設定基本配置（時區、命名慣例）
   - 註冊到 DI 容器
 
-- [ ] T005 [P] 設定健康檢查端點
+- [x] T005 [P] 設定健康檢查端點
   - 在 `Program.cs` 註冊 `AddHealthChecks()` 並加入 DbContext 檢查
   - 建立 `/health` 端點
   - 測試端點回應正確的 JSON 格式
@@ -71,51 +71,51 @@
 
 #### 資料層
 
-- [ ] T006 [P] 建立 User 實體
+- [x] T006 [P] 建立 User 實體
   - 在 `Core/Entities/User.cs` 建立實體類別
   - 包含業務方法: `Create()`, `UpdateInfo()`, `BindLineAccount()`, `ChangePassword()`
   - 在 `Infrastructure/Data/Configurations/UserConfiguration.cs` 建立 Fluent API 配置
 
-- [ ] T007 [P] 建立 InquirySystem 實體
+- [x] T007 [P] 建立 InquirySystem 實體
   - 在 `Core/Entities/InquirySystem.cs` 建立實體類別
   - 包含業務方法: `Create()`, `UpdateName()`, `Activate()`, `Deactivate()`
   - 在 `Infrastructure/Data/Configurations/InquirySystemConfiguration.cs` 建立配置
 
-- [ ] T008 [P] 建立 Handler 實體
+- [x] T008 [P] 建立 Handler 實體
   - 在 `Core/Entities/Handler.cs` 建立實體類別
   - 包含業務方法: `Create()`, `UpdateInfo()`, `Activate()`, `Deactivate()`
   - 在 `Infrastructure/Data/Configurations/HandlerConfiguration.cs` 建立配置
 
-- [ ] T009 [P] 建立 HandlerMapping 實體
+- [x] T009 [P] 建立 HandlerMapping 實體
   - 在 `Core/Entities/HandlerMapping.cs` 建立實體類別
   - 包含業務方法: `Create()`
   - 在 `Infrastructure/Data/Configurations/HandlerMappingConfiguration.cs` 建立配置
 
-- [ ] T010 [P] 建立 CallRecord 實體
+- [x] T010 [P] 建立 CallRecord 實體
   - 在 `Core/Entities/CallRecord.cs` 建立實體類別
   - 包含業務方法: `Create()`, `Update()`, `UpdateStatus()`, `TryAcquireLock()`, `ReleaseLock()`, `IsLockedByOther()`
   - 在 `Infrastructure/Data/Configurations/CallRecordConfiguration.cs` 建立配置（含編輯鎖定欄位和 RowVersion）
 
-- [ ] T011 [P] 建立 ChangeHistory 實體
+- [x] T011 [P] 建立 ChangeHistory 實體
   - 在 `Core/Entities/ChangeHistory.cs` 建立實體類別
   - 包含業務方法: `Create()`
   - 在 `Infrastructure/Data/Configurations/ChangeHistoryConfiguration.cs` 建立配置
 
-- [ ] T012 [P] 建立 NotificationLog 實體
+- [x] T012 [P] 建立 NotificationLog 實體
   - 在 `Core/Entities/NotificationLog.cs` 建立實體類別
   - 包含業務方法: `CreateSuccess()`, `CreateFailure()`
   - 在 `Infrastructure/Data/Configurations/NotificationLogConfiguration.cs` 建立配置
 
-- [ ] T013 在 ApplicationDbContext 註冊所有實體
+- [x] T013 在 ApplicationDbContext 註冊所有實體
   - 在 `OnModelCreating` 套用所有 Configuration
   - 設定 Entity 的 DbSet 屬性
 
-- [ ] T014 建立初始 Migration
+- [x] T014 建立初始 Migration
   - 執行 `dotnet ef migrations add InitialCreate`
   - 檢查生成的 Migration 檔案（資料表、欄位、索引、外鍵）
   - 執行 `dotnet ef database update` 建立資料庫
 
-- [ ] T015 建立種子資料初始化
+- [x] T015 建立種子資料初始化
   - 在 `Infrastructure/Data/DbInitializer.cs` 建立靜態方法 `Initialize()`
   - 種子資料: 預設管理者帳號（admin/Admin@123）、5 個詢問系統
   - 在 `Program.cs` 呼叫種子資料初始化
@@ -172,7 +172,7 @@
 
 #### 後端 Service 層
 
-- [ ] T022 [P] [US1] 建立 CallRecordService
+- [x] T022 [P] [US1] 建立 CallRecordService
   - 在 `Core/Services/CallRecordService.cs` 建立 Service 類別
   - 介面定義在 `Core/Interfaces/ICallRecordService.cs`
   - 實作方法: `CreateAsync()`, `GetByIdAsync()`, `UpdateAsync()`, `DeleteAsync()`
@@ -195,7 +195,7 @@
 
 #### Repository 層
 
-- [ ] T026 [P] [US1] 建立 CallRecordRepository
+- [x] T026 [P] [US1] 建立 CallRecordRepository
   - 在 `Infrastructure/Repositories/CallRecordRepository.cs` 繼承 GenericRepository
   - 介面定義在 `Core/Interfaces/ICallRecordRepository.cs`
   - 覆寫方法加入 Include 導覽屬性（InquirySystem, Handlers）
@@ -206,28 +206,28 @@
 
 #### Web API 層
 
-- [ ] T028 [P] [US1] 建立 CallRecordController
+- [x] T028 [P] [US1] 建立 CallRecordController
   - 在 `Web/Controllers/CallRecordController.cs` 建立 API Controller
   - 路由前綴: `/api/call-records`
 
-- [ ] T029 [US1] 實作 POST /api/call-records（建立紀錄）
+- [x] T029 [US1] 實作 POST /api/call-records（建立紀錄）
   - Request DTO: `CreateCallRecordRequest` 定義在 `Web/Models/CallRecordModels.cs`
   - Response DTO: `CallRecordDetailResponse`
   - 驗證: 必填欄位、主旨≤50字、內容≤150字、電話格式
   - 成功回傳 201 Created 和完整紀錄資訊
 
-- [ ] T030 [US1] 實作 GET /api/call-records/{id}（查詢詳情）
+- [x] T030 [US1] 實作 GET /api/call-records/{id}（查詢詳情）
   - Response DTO: `CallRecordDetailResponse`
   - 包含關聯資料: InquirySystem, Handlers, ChangeHistories, 編輯鎖定狀態
   - 404 找不到時回傳標準錯誤格式
 
-- [ ] T031 [US1] 實作 PUT /api/call-records/{id}（更新紀錄）
+- [x] T031 [US1] 實作 PUT /api/call-records/{id}（更新紀錄）
   - Request DTO: `UpdateCallRecordRequest` （含 RowVersion）
   - 檢查編輯鎖定狀態，未鎖定則回傳 409 Conflict
   - 樂觀鎖定: 捕捉 DbUpdateConcurrencyException 回傳 409
   - 記錄變更歷史
 
-- [ ] T032 [US1] 實作 DELETE /api/call-records/{id}（刪除紀錄）
+- [x] T032 [US1] 實作 DELETE /api/call-records/{id}（刪除紀錄）
   - 僅 Admin 角色可執行（`[Authorize(Roles = "Admin")]`）
   - 成功回傳 204 No Content
   - 403 無權限時回傳標準錯誤格式
@@ -281,56 +281,56 @@
 
 #### 後端 Service 層
 
-- [ ] T039 [US2] CallRecordService 新增搜尋方法
+- [x] T039 [US2] CallRecordService 新增搜尋方法
   - 實作 `SearchAsync(SearchFilterModel filter)` 方法
   - 支援 IQueryable 動態組合查詢條件
   - 支援分頁和排序參數
 
 #### Repository 層
 
-- [ ] T040 [US2] CallRecordRepository 新增搜尋方法
+- [x] T040 [US2] CallRecordRepository 新增搜尋方法
   - 實作 `SearchAsync()` 方法
   - 使用 LINQ 動態查詢
   - 最佳化 Include 策略（避免 N+1 查詢）
 
 #### Web API 層
 
-- [ ] T041 [US2] 實作 GET /api/call-records（搜尋列表）
+- [x] T041 [US2] 實作 GET /api/call-records（搜尋列表）
   - Query Parameters: `keyword`, `inquirySystemId`, `status`, `urgencyLevel`, `startDate`, `endDate`, `pageNumber`, `pageSize`, `sortBy`, `sortOrder`
   - Response DTO: `CallRecordPagedResponse` 包含 `items`, `pageNumber`, `pageSize`, `totalCount`, `totalPages`
   - 預設排序: 來電日期降序
 
-- [ ] T042 [US2] 建立搜尋條件 ViewModel
+- [x] T042 [US2] 建立搜尋條件 ViewModel
   - 在 `Web/Models/SearchFilterModel.cs` 定義搜尋條件
   - 驗證: startDate ≤ endDate, pageSize ≤ 100
 
 #### 前端 MVC Views
 
-- [ ] T043 [P] [US2] 建立搜尋表單 Partial View
+- [x] T043 [P] [US2] 建立搜尋表單 Partial View
   - 在 `Web/Views/CallRecord/_SearchForm.cshtml` 建立部分檢視
   - 包含所有篩選條件欄位
   - 日期快速選項: 今天、本週、本月、上月、近7天、自訂
 
-- [ ] T044 [P] [US2] 建立紀錄清單 View
+- [x] T044 [P] [US2] 建立紀錄清單 View
   - 在 `Web/Views/CallRecord/Index.cshtml` 建立頁面
   - 顯示搜尋表單 + 分頁清單
   - 欄位排序功能（點擊標題切換升降序）
   - 分頁控制項（上一頁、下一頁、頁碼、每頁筆數）
 
-- [ ] T045 [US2] 實作清單 AJAX 更新
+- [x] T045 [US2] 實作清單 AJAX 更新
   - 使用 jQuery 攔截表單提交
   - AJAX 呼叫搜尋 API
   - 更新清單內容（無需整頁刷新）
 
 #### 測試
 
-- [ ] T046 [P] [US2] CallRecordRepository 搜尋方法測試
+- [x] T046 [P] [US2] CallRecordRepository 搜尋方法測試
   - 測試關鍵字搜尋（主旨、內容）
   - 測試多條件組合篩選
   - 測試分頁正確性
   - 測試排序功能
 
-- [ ] T047 [P] [US2] CallRecordController 搜尋 API 測試
+- [x] T047 [P] [US2] CallRecordController 搜尋 API 測試
   - 測試各種篩選條件組合
   - 測試分頁參數驗證
   - 測試空結果回應
@@ -350,60 +350,60 @@
 
 #### 後端 Service 層
 
-- [ ] T048 [US3] CallRecordService 新增狀態更新方法
+- [x] T048 [US3] CallRecordService 新增狀態更新方法
   - 實作 `UpdateStatusAsync(int id, ProcessStatus newStatus, string userId)` 方法
   - 自動記錄狀態變更到 ChangeHistory
   - 記錄完成時間和完成者（當變更為 Completed）
 
-- [ ] T049 [US3] 建立 ChangeHistoryService
+- [x] T049 [US3] 建立 ChangeHistoryService
   - 在 `Core/Services/ChangeHistoryService.cs` 建立 Service
   - 實作 `LogChangeAsync()` 方法（記錄單一欄位變更）
   - 實作 `GetHistoryAsync(int callRecordId)` 方法（查詢變更歷史）
 
-- [ ] T050 [US3] CallRecordService 整合變更歷史記錄
+- [x] T050 [US3] CallRecordService 整合變更歷史記錄
   - 在 `UpdateAsync()` 方法中比對新舊值
   - 對每個變更欄位呼叫 `LogChangeAsync()`
   - 使用反射或手動比對（依團隊偏好）
 
 #### Repository 層
 
-- [ ] T051 [P] [US3] 建立 ChangeHistoryRepository
+- [x] T051 [P] [US3] 建立 ChangeHistoryRepository
   - 在 `Infrastructure/Repositories/ChangeHistoryRepository.cs` 建立 Repository
   - 實作方法: `GetByCallRecordIdAsync()`, `AddAsync()`
 
 #### Web API 層
 
-- [ ] T052 [US3] 實作 PATCH /api/call-records/{id}/status（快速狀態更新）
+- [x] T052 [US3] 實作 PATCH /api/call-records/{id}/status（快速狀態更新）
   - Request Body: `{ "status": "Completed" }`
   - Response DTO: `CallRecordDetailResponse`
   - 驗證狀態值合法性
 
-- [ ] T053 [US3] 實作 GET /api/call-records/{id}/change-history（查詢變更歷史）
+- [x] T053 [US3] 實作 GET /api/call-records/{id}/change-history（查詢變更歷史）
   - Response DTO: `ChangeHistoryItem[]` 包含 `fieldName`, `oldValue`, `newValue`, `changedAt`, `changedBy`
   - 依時間降序排列
 
-- [ ] T054 [US3] 實作 PUT /api/call-records/{id}/handlers（更新處理人員）
+- [x] T054 [US3] 實作 PUT /api/call-records/{id}/handlers（更新處理人員）
   - Request Body: `{ "handlerIds": [1, 2, 3] }`
   - 記錄處理人員變更到 ChangeHistory
 
 #### 前端 MVC Views
 
-- [ ] T055 [P] [US3] 在紀錄詳情頁面加入狀態切換按鈕
+- [x] T055 [P] [US3] 在紀錄詳情頁面加入狀態切換按鈕
   - 顯示當前狀態
   - 提供快速切換按鈕（未處理 → 處理中 → 已完成）
   - AJAX 呼叫狀態更新 API
 
-- [ ] T056 [P] [US3] 在紀錄詳情頁面加入變更歷史區塊
+- [x] T056 [P] [US3] 在紀錄詳情頁面加入變更歷史區塊
   - 顯示時間軸格式的變更歷史
   - 顯示變更者、變更時間、變更欄位、舊值 → 新值
 
 #### 測試
 
-- [ ] T057 [P] [US3] ChangeHistoryService 單元測試
+- [x] T057 [P] [US3] ChangeHistoryService 單元測試
   - 測試 `LogChangeAsync()`: 正確記錄變更
   - 測試 `GetHistoryAsync()`: 正確查詢歷史
 
-- [ ] T058 [P] [US3] 狀態更新整合測試
+- [x] T058 [P] [US3] 狀態更新整合測試
   - 測試狀態流轉流程
   - 驗證變更歷史正確記錄
 
@@ -501,7 +501,7 @@
 
 #### Web API 層
 
-- [ ] T070 [US5] 實作 POST /api/reports/excel（匯出報表）
+- [x] T070 [US5] 實作 POST /api/reports/excel（匯出報表）
   - Request Body: `ExcelReportRequest` （篩選條件，與搜尋 API 相同）
   - Response: 二進位檔案（`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`）
   - 檔名格式: `來電紀錄_2026-01.xlsx`
@@ -559,11 +559,11 @@
 
 #### Web API 層
 
-- [ ] T077 [P] [US6] 實作 POST /api/call-records/{id}/lock（取得鎖定）
+- [x] T077 [P] [US6] 實作 POST /api/call-records/{id}/lock（取得鎖定）
   - Response: `{ "success": true, "lockedUntil": "2026-01-28T15:30:00Z" }`
   - 失敗時回傳 409: `{ "success": false, "message": "此紀錄正在被張三編輯中", "lockedBy": "張三", "lockedUntil": "..." }`
 
-- [ ] T078 [P] [US6] 實作 DELETE /api/call-records/{id}/lock（釋放鎖定）
+- [x] T078 [P] [US6] 實作 DELETE /api/call-records/{id}/lock（釋放鎖定）
   - 成功回傳 204 No Content
 
 - [ ] T079 [P] [US6] 實作強制解鎖端點（僅 Admin）

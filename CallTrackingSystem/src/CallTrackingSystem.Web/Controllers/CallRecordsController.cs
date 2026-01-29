@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using CallTrackingSystem.Core.Services;
 using CallTrackingSystem.Core.DTOs;
 using CallTrackingSystem.Core.Enums;
+using CallTrackingSystem.Core.Services;
+using CallTrackingSystem.Web.Models;
 
 namespace CallTrackingSystem.Web.Controllers;
 
@@ -96,10 +97,7 @@ public class CallRecordsController : ControllerBase
     /// <summary>
     /// 取得來電紀錄清單（分頁）
     /// </summary>
-    /// <param name="pageNumber">頁碼（從 1 開始）</param>
-    /// <param name="pageSize">每頁筆數（預設 10）</param>
-    /// <param name="searchKeyword">搜尋關鍵字（搜尋主旨、內容、聯絡人）</param>
-    /// <param name="inquirySystemId">詢問系統 ID</param>
+    /// <param name="filter">搜尋條件</param>
     /// <param name="cancellationToken">取消權杖</param>
     /// <returns>分頁的來電紀錄清單</returns>
     /// <response code="200">成功取得來電紀錄清單</response>
@@ -108,30 +106,32 @@ public class CallRecordsController : ControllerBase
     [ProducesResponseType(typeof(PagedResult<CallRecordListItemResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCallRecords(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] string? searchKeyword = null,
-        [FromQuery] int? inquirySystemId = null,
+        [FromQuery] SearchFilterModel filter,
         CancellationToken cancellationToken = default)
     {
-        if (pageNumber < 1)
+        try
         {
-            return BadRequest(new { error = "頁碼必須大於等於 1" });
-        }
+            var request = new CallRecordSearchRequest
+            {
+                Keyword = filter.Keyword,
+                InquirySystemId = filter.InquirySystemId,
+                Status = filter.Status,
+                UrgencyLevel = filter.UrgencyLevel,
+                StartDate = filter.StartDate,
+                EndDate = filter.EndDate,
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+                SortBy = filter.SortBy,
+                SortOrder = filter.SortOrder
+            };
 
-        if (pageSize < 1 || pageSize > 100)
+            var result = await _callRecordService.GetPagedAsync(request, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = "每頁筆數必須介於 1 到 100 之間" });
+            return BadRequest(new { error = ex.Message });
         }
-
-        var result = await _callRecordService.GetPagedAsync(
-            pageNumber,
-            pageSize,
-            searchKeyword,
-            inquirySystemId,
-            cancellationToken);
-
-        return Ok(result);
     }
 
     /// <summary>
@@ -376,6 +376,50 @@ public class CallRecordsController : ControllerBase
         {
             _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
             return NotFound(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// 更新處理人員
+    /// </summary>
+    /// <param name="id">來電紀錄 ID</param>
+    /// <param name="request">處理人員更新資料</param>
+    /// <param name="cancellationToken">取消權杖</param>
+    /// <returns>更新後的來電紀錄</returns>
+    /// <response code="200">更新成功</response>
+    /// <response code="400">請求資料無效</response>
+    /// <response code="404">找不到指定的來電紀錄</response>
+    [HttpPut("{id}/handlers")]
+    [ProducesResponseType(typeof(CallRecordResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateHandlers(
+        [FromRoute] int id,
+        [FromBody] UpdateHandlersRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // TODO: 從 JWT Token 取得使用者 ID，目前使用測試值
+            var userId = "test-user-001";
+
+            var result = await _callRecordService.UpdateHandlersAsync(
+                id,
+                request.HandlerIds,
+                userId,
+                cancellationToken);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("來電紀錄"))
+        {
+            _logger.LogWarning(ex, "找不到來電紀錄: {CallRecordId}", id);
+            return NotFound(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "更新處理人員失敗: {Message}", ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 }

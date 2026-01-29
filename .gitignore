@@ -1,0 +1,50 @@
+## .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+## Build results
+**/[Dd]ebug/
+**/[Dd]ebugPublic/
+**/[Rr]elease/
+**/[Rr]eleases/
+**/x64/
+**/x86/
+**/[Aa][Rr][Mm]/
+**/[Aa][Rr][Mm]64/
+**/bld/
+**/[Ll]og/
+**/[Ll]ogs/
+
+## Visual Studio
+**/.vs/
+**/.vscode/
+**/.idea/
+*.csproj.user
+*.dbmdl
+*.jfm
+
+## NuGet
+**/packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Test results
+**/[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResult.xml
+
+## Environment/OS
+.env*
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp

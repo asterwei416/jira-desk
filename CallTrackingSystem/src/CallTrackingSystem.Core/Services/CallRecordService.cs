@@ -89,17 +89,17 @@ public class CallRecordService
     /// 取得分頁來電紀錄列表
     /// </summary>
     public async Task<PagedResult<CallRecordListItemResponse>> GetPagedAsync(
-        int pageNumber,
-        int pageSize,
-        string? searchKeyword = null,
-        int? inquirySystemId = null,
+        CallRecordSearchRequest request,
         CancellationToken cancellationToken = default)
     {
+        var criteria = BuildSearchCriteria(request);
+
         var (items, totalCount) = await _callRecordRepository.GetPagedAsync(
-            pageNumber,
-            pageSize,
-            searchKeyword,
-            inquirySystemId,
+            criteria,
+            request.PageNumber,
+            request.PageSize,
+            request.SortBy,
+            request.SortOrder,
             cancellationToken);
 
         var responseItems = items.Select(MapToListItemResponse).ToList();
@@ -108,8 +108,8 @@ public class CallRecordService
         {
             Items = responseItems,
             TotalCount = totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
         };
     }
 
@@ -217,6 +217,61 @@ public class CallRecordService
                 ChangedByUserId = h.ChangedByUserId
             }).ToList()
         };
+    }
+
+    /// <summary>
+    /// 更新處理人員並記錄變更歷史
+    /// </summary>
+    public async Task<CallRecordResponse> UpdateHandlersAsync(
+        int id,
+        IReadOnlyCollection<int> handlerIds,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var callRecord = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        if (callRecord == null)
+        {
+            throw new InvalidOperationException("來電紀錄不存在");
+        }
+
+        var distinctIds = handlerIds.Distinct().ToList();
+        var handlers = await _handlerRepository.GetByIdsAsync(distinctIds, cancellationToken);
+
+        if (handlers.Count != distinctIds.Count)
+        {
+            throw new InvalidOperationException("處理人員不存在");
+        }
+
+        var oldHandlerNames = callRecord.Handlers.Select(h => h.Name).OrderBy(x => x).ToList();
+        var newHandlerNames = handlers.Select(h => h.Name).OrderBy(x => x).ToList();
+
+        var changed = !oldHandlerNames.SequenceEqual(newHandlerNames);
+
+        callRecord.Handlers = handlers;
+        callRecord.Update(
+            callRecord.Subject,
+            callRecord.Content,
+            callRecord.UrgencyLevel,
+            callRecord.ContactName,
+            callRecord.ContactPhone,
+            callRecord.FaqReference);
+
+        await _callRecordRepository.UpdateAsync(callRecord, cancellationToken);
+
+        if (changed)
+        {
+            var history = ChangeHistory.Create(
+                callRecord.Id,
+                "Handlers",
+                JoinHandlerNames(oldHandlerNames),
+                JoinHandlerNames(newHandlerNames),
+                userId);
+
+            await _changeHistoryRepository.AddRangeAsync(new[] { history }, cancellationToken);
+        }
+
+        var updated = await _callRecordRepository.GetByIdAsync(id, cancellationToken);
+        return MapToResponse(updated!);
     }
 
     /// <summary>
@@ -452,6 +507,39 @@ public class CallRecordService
         };
     }
 
+    private static CallRecordSearchCriteria BuildSearchCriteria(CallRecordSearchRequest request)
+    {
+        if (request.StartDate.HasValue && request.EndDate.HasValue && request.StartDate > request.EndDate)
+        {
+            throw new InvalidOperationException("開始日期不可晚於結束日期");
+        }
+
+        DateTime? startUtc = null;
+        DateTime? endUtc = null;
+
+        if (request.StartDate.HasValue)
+        {
+            var startLocal = request.StartDate.Value.Date;
+            startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, TaipeiTimeZone);
+        }
+
+        if (request.EndDate.HasValue)
+        {
+            var endLocal = request.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+            endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, TaipeiTimeZone);
+        }
+
+        return new CallRecordSearchCriteria
+        {
+            Keyword = request.Keyword?.Trim(),
+            InquirySystemId = request.InquirySystemId,
+            Status = ParseEnum<ProcessStatus>(request.Status),
+            UrgencyLevel = ParseEnum<UrgencyLevel>(request.UrgencyLevel),
+            StartDateUtc = startUtc,
+            EndDateUtc = endUtc
+        };
+    }
+
     private static TEnum? ParseEnum<TEnum>(string? value) where TEnum : struct
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -543,6 +631,11 @@ public class CallRecordService
 
         ws.Columns().AdjustToContents();
         ws.SheetView.FreezeRows(1);
+    }
+
+    private static string? JoinHandlerNames(IReadOnlyCollection<string> names)
+    {
+        return names.Count == 0 ? null : string.Join(", ", names);
     }
 
     private static void BuildSummarySheet(XLWorkbook workbook, List<CallRecord> records)

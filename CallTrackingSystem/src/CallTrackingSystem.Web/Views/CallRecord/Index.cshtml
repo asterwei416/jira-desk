@@ -1,0 +1,303 @@
+@model SearchFilterModel
+@{
+    ViewData["Title"] = "來電紀錄搜尋";
+}
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card position-relative">
+            <div class="loading-mask" id="loading-mask">
+                <div class="spinner-border text-primary" role="status" aria-label="載入中"></div>
+            </div>
+            <div class="card-body">
+                <h2 class="h5 mb-3">搜尋條件</h2>
+                @await Html.PartialAsync("_SearchForm", Model)
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">搜尋結果</h2>
+                    <span id="result-summary" class="text-muted"></span>
+                </div>
+                <div id="result-alert" class="alert alert-danger d-none" role="alert"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="sortable" data-sort="createdAt">來電日期</th>
+                                <th>詢問系統</th>
+                                <th>主旨</th>
+                                <th class="sortable" data-sort="urgencyLevel">緊急度</th>
+                                <th>處理狀態</th>
+                                <th>聯絡人</th>
+                                <th class="sortable" data-sort="updatedAt">更新時間</th>
+                                <th>處理人員</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-body">
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">尚未載入資料</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="分頁" class="mt-3">
+                    <ul class="pagination justify-content-end" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const form = $("#search-form");
+        const loadingMask = $("#loading-mask");
+        const resultBody = $("#result-body");
+        const resultSummary = $("#result-summary");
+        const resultAlert = $("#result-alert");
+        const pagination = $("#pagination");
+
+        function showLoading(show) {
+            if (show) {
+                loadingMask.css("display", "flex");
+            } else {
+                loadingMask.hide();
+            }
+        }
+
+        function getFormQuery() {
+            const data = {};
+            form.serializeArray().forEach(item => {
+                if (item.value !== "") {
+                    data[item.name] = item.value;
+                }
+            });
+            return data;
+        }
+
+        function formatDate(value) {
+            if (!value) return "-";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const dd = String(date.getDate()).padStart(2, "0");
+            const hh = String(date.getHours()).padStart(2, "0");
+            const min = String(date.getMinutes()).padStart(2, "0");
+            return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
+        }
+
+        function statusBadge(status) {
+            const map = {
+                Pending: { text: "待處理", cls: "bg-secondary" },
+                InProgress: { text: "處理中", cls: "bg-primary" },
+                Completed: { text: "已完成", cls: "bg-success" },
+                Closed: { text: "已結案", cls: "bg-dark" }
+            };
+            const item = map[status] || { text: status || "-", cls: "bg-light text-dark" };
+            return `<span class="badge badge-status ${item.cls}">${item.text}</span>`;
+        }
+
+        function urgencyLabel(value) {
+            const map = {
+                Low: "低",
+                Medium: "中",
+                High: "高"
+            };
+            return map[value] || value || "-";
+        }
+
+        function renderTable(items) {
+            if (!items || items.length === 0) {
+                resultBody.html('<tr><td colspan="9" class="text-center text-muted">查無資料</td></tr>');
+                return;
+            }
+
+            const rows = items.map(item => {
+                const handlerText = item.HandlerCount ?? item.handlerCount ?? 0;
+                return `<tr>
+                    <td>${formatDate(item.CreatedAt ?? item.createdAt)}</td>
+                    <td>${item.InquirySystemName ?? item.inquirySystemName ?? "-"}</td>
+                    <td>${item.Subject ?? item.subject}</td>
+                    <td>${urgencyLabel(item.UrgencyLevel ?? item.urgencyLevel)}</td>
+                    <td>${statusBadge(item.Status ?? item.status)}</td>
+                    <td>${item.ContactName ?? item.contactName}</td>
+                    <td>${formatDate(item.UpdatedAt ?? item.updatedAt)}</td>
+                    <td>${handlerText}</td>
+                    <td><a class="btn btn-sm btn-outline-primary" href="/CallRecord/Details/${item.Id ?? item.id}">查看</a></td>
+                </tr>`;
+            }).join("");
+
+            resultBody.html(rows);
+        }
+
+        function renderPagination(pageNumber, totalPages) {
+            pagination.empty();
+            if (!totalPages || totalPages <= 1) {
+                return;
+            }
+
+            const createItem = (label, page, disabled, active) => {
+                const li = $("<li>").addClass("page-item");
+                if (disabled) li.addClass("disabled");
+                if (active) li.addClass("active");
+                const link = $("<a>").addClass("page-link").attr("href", "#").text(label);
+                link.on("click", function (e) {
+                    e.preventDefault();
+                    if (disabled || active) return;
+                    form.find("[name='pageNumber']").val(page);
+                    submitSearch();
+                });
+                li.append(link);
+                return li;
+            };
+
+            pagination.append(createItem("上一頁", pageNumber - 1, pageNumber <= 1, false));
+
+            const start = Math.max(1, pageNumber - 2);
+            const end = Math.min(totalPages, pageNumber + 2);
+            for (let i = start; i <= end; i++) {
+                pagination.append(createItem(i, i, false, i === pageNumber));
+            }
+
+            pagination.append(createItem("下一頁", pageNumber + 1, pageNumber >= totalPages, false));
+        }
+
+        function updateSummary(data) {
+            const totalCount = data.TotalCount ?? data.totalCount ?? 0;
+            const pageNumber = data.PageNumber ?? data.pageNumber ?? 1;
+            const totalPages = data.TotalPages ?? data.totalPages ?? 1;
+            resultSummary.text(`共 ${totalCount} 筆，第 ${pageNumber} / ${totalPages} 頁`);
+        }
+
+        function submitSearch() {
+            showLoading(true);
+            resultAlert.addClass("d-none").text("");
+            const query = getFormQuery();
+
+            $.ajax({
+                url: "/api/call-records",
+                method: "GET",
+                data: query,
+                success: function (data) {
+                    const items = data.Items ?? data.items ?? [];
+                    renderTable(items);
+                    updateSummary(data);
+                    const pageNumber = data.PageNumber ?? data.pageNumber ?? 1;
+                    const totalPages = data.TotalPages ?? data.totalPages ?? 1;
+                    renderPagination(pageNumber, totalPages);
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.error || "查詢失敗，請稍後再試";
+                    resultAlert.removeClass("d-none").text(message);
+                },
+                complete: function () {
+                    showLoading(false);
+                }
+            });
+        }
+
+        function setDateRange(range) {
+            const startInput = form.find("[name='startDate']");
+            const endInput = form.find("[name='endDate']");
+            const today = new Date();
+            const toDateString = (date) => date.toISOString().split("T")[0];
+
+            if (range === "today") {
+                startInput.val(toDateString(today));
+                endInput.val(toDateString(today));
+                return;
+            }
+
+            if (range === "week") {
+                const day = today.getDay();
+                const diff = day === 0 ? 6 : day - 1;
+                const monday = new Date(today);
+                monday.setDate(today.getDate() - diff);
+                startInput.val(toDateString(monday));
+                endInput.val(toDateString(today));
+                return;
+            }
+
+            if (range === "month") {
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                startInput.val(toDateString(firstDay));
+                endInput.val(toDateString(today));
+                return;
+            }
+
+            if (range === "lastMonth") {
+                const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+                startInput.val(toDateString(firstDay));
+                endInput.val(toDateString(lastDay));
+                return;
+            }
+
+            if (range === "last7") {
+                const start = new Date(today);
+                start.setDate(today.getDate() - 6);
+                startInput.val(toDateString(start));
+                endInput.val(toDateString(today));
+                return;
+            }
+
+            if (range === "custom") {
+                startInput.val("");
+                endInput.val("");
+            }
+        }
+
+        $(document).on("click", "[data-range]", function () {
+            setDateRange($(this).data("range"));
+        });
+
+        $(document).on("click", ".sortable", function () {
+            const sortBy = $(this).data("sort");
+            const currentSortBy = form.find("[name='sortBy']").val();
+            let sortOrder = form.find("[name='sortOrder']").val();
+
+            if (currentSortBy === sortBy) {
+                sortOrder = sortOrder === "asc" ? "desc" : "asc";
+            } else {
+                sortOrder = "desc";
+            }
+
+            form.find("[name='sortBy']").val(sortBy);
+            form.find("[name='sortOrder']").val(sortOrder);
+            form.find("[name='pageNumber']").val(1);
+
+            $(".sortable").removeClass("asc desc");
+            $(this).addClass(sortOrder);
+
+            submitSearch();
+        });
+
+        $("#reset-button").on("click", function () {
+            form[0].reset();
+            form.find("[name='pageNumber']").val(1);
+            form.find("[name='pageSize']").val("20");
+            form.find("[name='sortBy']").val("createdAt");
+            form.find("[name='sortOrder']").val("desc");
+            $(".sortable").removeClass("asc desc");
+            submitSearch();
+        });
+
+        form.on("submit", function (e) {
+            e.preventDefault();
+            submitSearch();
+        });
+
+        submitSearch();
+    })();
+</script>
+}

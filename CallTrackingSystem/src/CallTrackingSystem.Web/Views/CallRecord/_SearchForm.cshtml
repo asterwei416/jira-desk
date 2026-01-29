@@ -1,0 +1,72 @@
+@model SearchFilterModel
+
+<form id="search-form" class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">關鍵字</label>
+        <input type="text" name="keyword" class="form-control" placeholder="主旨/內容/聯絡人" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">詢問系統 ID</label>
+        <input type="number" name="inquirySystemId" class="form-control" min="1" placeholder="例如 1" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">處理狀態</label>
+        <select name="status" class="form-select">
+            <option value="">全部</option>
+            <option value="Pending">待處理</option>
+            <option value="InProgress">處理中</option>
+            <option value="Completed">已完成</option>
+            <option value="Closed">已結案</option>
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">緊急程度</label>
+        <select name="urgencyLevel" class="form-select">
+            <option value="">全部</option>
+            <option value="Low">低</option>
+            <option value="Medium">中</option>
+            <option value="High">高</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">開始日期</label>
+        <input type="date" name="startDate" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">結束日期</label>
+        <input type="date" name="endDate" class="form-control" />
+    </div>
+
+    <div class="col-12">
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-range="today">今天</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-range="week">本週</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-range="month">本月</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-range="lastMonth">上月</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-range="last7">近7天</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-range="custom">自訂</button>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">每頁筆數</label>
+        <select name="pageSize" class="form-select">
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">頁碼</label>
+        <input type="number" name="pageNumber" class="form-control" min="1" value="1" />
+    </div>
+
+    <input type="hidden" name="sortBy" value="createdAt" />
+    <input type="hidden" name="sortOrder" value="desc" />
+
+    <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">搜尋</button>
+        <button type="button" id="reset-button" class="btn btn-outline-secondary">重設</button>
+    </div>
+</form>

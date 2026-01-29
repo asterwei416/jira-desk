@@ -80,6 +80,14 @@ public record UpdateCallRecordRequest
 }
 
 /// <summary>
+/// 更新處理人員請求 DTO
+/// </summary>
+public record UpdateHandlersRequest
+{
+    public required List<int> HandlerIds { get; init; }
+}
+
+/// <summary>
 /// 來電紀錄回應 DTO
 /// </summary>
 public record CallRecordResponse
@@ -222,4 +230,21 @@ public record CallRecordSearchCriteria
     public UrgencyLevel? UrgencyLevel { get; init; }
     public DateTime? StartDateUtc { get; init; }
     public DateTime? EndDateUtc { get; init; }
+}
+
+/// <summary>
+/// 來電紀錄搜尋請求 DTO
+/// </summary>
+public record CallRecordSearchRequest
+{
+    public string? Keyword { get; init; }
+    public int? InquirySystemId { get; init; }
+    public string? Status { get; init; }
+    public string? UrgencyLevel { get; init; }
+    public DateTime? StartDate { get; init; }
+    public DateTime? EndDate { get; init; }
+    public int PageNumber { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+    public string SortBy { get; init; } = "createdAt";
+    public string SortOrder { get; init; } = "desc";
 }

@@ -1,0 +1,176 @@
+@{
+    ViewData["Title"] = "來電紀錄詳情";
+    var callRecordId = ViewData["CallRecordId"] ?? 0;
+}
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card position-relative">
+            <div class="loading-mask" id="detail-loading">
+                <div class="spinner-border text-primary" role="status" aria-label="載入中"></div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">來電紀錄詳情</h2>
+                    <a href="/CallRecord/Index" class="btn btn-outline-secondary btn-sm">返回清單</a>
+                </div>
+                <hr />
+                <div id="detail-alert" class="alert alert-danger d-none" role="alert"></div>
+                <dl class="row" id="detail-content"></dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 mb-3">快速狀態切換</h2>
+                <div class="btn-group" role="group" aria-label="狀態切換">
+                    <button type="button" class="btn btn-outline-secondary" data-status="Pending">待處理</button>
+                    <button type="button" class="btn btn-outline-primary" data-status="InProgress">處理中</button>
+                    <button type="button" class="btn btn-outline-success" data-status="Completed">已完成</button>
+                    <button type="button" class="btn btn-outline-dark" data-status="Closed">已結案</button>
+                </div>
+                <div class="text-muted mt-2">目前狀態：<span id="current-status">-</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 mb-3">變更歷史</h2>
+                <div id="history-empty" class="text-muted">尚無變更紀錄</div>
+                <ul class="list-group" id="history-list"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const callRecordId = "@callRecordId";
+        const detailContent = $("#detail-content");
+        const detailAlert = $("#detail-alert");
+        const detailLoading = $("#detail-loading");
+        const currentStatus = $("#current-status");
+        const historyList = $("#history-list");
+        const historyEmpty = $("#history-empty");
+
+        function showLoading(show) {
+            if (show) {
+                detailLoading.css("display", "flex");
+            } else {
+                detailLoading.hide();
+            }
+        }
+
+        function formatDate(value) {
+            if (!value) return "-";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const dd = String(date.getDate()).padStart(2, "0");
+            const hh = String(date.getHours()).padStart(2, "0");
+            const min = String(date.getMinutes()).padStart(2, "0");
+            return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
+        }
+
+        function renderDetail(data) {
+            const html = `
+                <dt class="col-sm-2">主旨</dt><dd class="col-sm-10">${data.Subject ?? data.subject}</dd>
+                <dt class="col-sm-2">內容</dt><dd class="col-sm-10">${data.Content ?? data.content}</dd>
+                <dt class="col-sm-2">詢問系統</dt><dd class="col-sm-10">${data.InquirySystem?.Name ?? data.inquirySystem?.name ?? "-"}</dd>
+                <dt class="col-sm-2">緊急程度</dt><dd class="col-sm-10">${data.UrgencyLevel ?? data.urgencyLevel}</dd>
+                <dt class="col-sm-2">狀態</dt><dd class="col-sm-10">${data.Status ?? data.status}</dd>
+                <dt class="col-sm-2">聯絡人</dt><dd class="col-sm-10">${data.ContactName ?? data.contactName}</dd>
+                <dt class="col-sm-2">聯絡電話</dt><dd class="col-sm-10">${data.ContactPhone ?? data.contactPhone}</dd>
+                <dt class="col-sm-2">建立時間</dt><dd class="col-sm-10">${formatDate(data.CreatedAt ?? data.createdAt)}</dd>
+                <dt class="col-sm-2">更新時間</dt><dd class="col-sm-10">${formatDate(data.UpdatedAt ?? data.updatedAt)}</dd>
+                <dt class="col-sm-2">處理人員</dt><dd class="col-sm-10">${(data.Handlers ?? data.handlers ?? []).map(h => h.Name ?? h.name).join(", ") || "-"}</dd>
+            `;
+            detailContent.html(html);
+            currentStatus.text(data.Status ?? data.status ?? "-");
+        }
+
+        function renderHistory(items) {
+            if (!items || items.length === 0) {
+                historyList.empty();
+                historyEmpty.show();
+                return;
+            }
+
+            historyEmpty.hide();
+            const rows = items.map(item => {
+                const fieldName = item.FieldName ?? item.fieldName;
+                const oldValue = item.OldValue ?? item.oldValue ?? "(空)";
+                const newValue = item.NewValue ?? item.newValue ?? "(空)";
+                const changedAt = formatDate(item.ChangedAt ?? item.changedAt);
+                const changedBy = item.ChangedByUserId ?? item.changedByUserId ?? "-";
+
+                return `<li class="list-group-item">
+                    <div class="fw-semibold">${fieldName}</div>
+                    <div class="text-muted small">${changedAt} / ${changedBy}</div>
+                    <div>${oldValue} → ${newValue}</div>
+                </li>`;
+            }).join("");
+
+            historyList.html(rows);
+        }
+
+        function loadDetail() {
+            showLoading(true);
+            detailAlert.addClass("d-none").text("");
+
+            $.ajax({
+                url: `/api/call-records/${callRecordId}`,
+                method: "GET",
+                success: function (data) {
+                    renderDetail(data);
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.error || "無法取得紀錄";
+                    detailAlert.removeClass("d-none").text(message);
+                },
+                complete: function () {
+                    showLoading(false);
+                }
+            });
+        }
+
+        function loadHistory() {
+            $.ajax({
+                url: `/api/call-records/${callRecordId}/change-history`,
+                method: "GET",
+                success: function (data) {
+                    const items = data.Changes ?? data.changes ?? [];
+                    renderHistory(items);
+                }
+            });
+        }
+
+        $(document).on("click", "[data-status]", function () {
+            const status = $(this).data("status");
+            $.ajax({
+                url: `/api/call-records/${callRecordId}/status`,
+                method: "PATCH",
+                contentType: "application/json",
+                data: JSON.stringify({ status }),
+                success: function (data) {
+                    renderDetail(data);
+                    loadHistory();
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.error || "更新狀態失敗";
+                    detailAlert.removeClass("d-none").text(message);
+                }
+            });
+        });
+
+        loadDetail();
+        loadHistory();
+    })();
+</script>
+}

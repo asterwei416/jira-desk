@@ -24,10 +24,11 @@ public class CallRecordRepository : ICallRecordRepository
     }
 
     public async Task<(List<CallRecord> Items, int TotalCount)> GetPagedAsync(
+        CallTrackingSystem.Core.DTOs.CallRecordSearchCriteria criteria,
         int pageNumber,
         int pageSize,
-        string? searchKeyword = null,
-        int? inquirySystemId = null,
+        string sortBy,
+        string sortOrder,
         CancellationToken cancellationToken = default)
     {
         var query = _context.CallRecords
@@ -36,23 +37,51 @@ public class CallRecordRepository : ICallRecordRepository
             .AsQueryable();
 
         // 搜尋條件
-        if (!string.IsNullOrWhiteSpace(searchKeyword))
+        if (!string.IsNullOrWhiteSpace(criteria.Keyword))
         {
+            var keyword = criteria.Keyword.Trim();
             query = query.Where(x => 
-                x.Subject.Contains(searchKeyword) || 
-                x.Content.Contains(searchKeyword) ||
-                x.ContactName.Contains(searchKeyword));
+                x.Subject.Contains(keyword) || 
+                x.Content.Contains(keyword) ||
+                x.ContactName.Contains(keyword));
         }
 
-        if (inquirySystemId.HasValue)
+        if (criteria.InquirySystemId.HasValue)
         {
-            query = query.Where(x => x.InquirySystemId == inquirySystemId.Value);
+            query = query.Where(x => x.InquirySystemId == criteria.InquirySystemId.Value);
+        }
+
+        if (criteria.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == criteria.Status.Value);
+        }
+
+        if (criteria.UrgencyLevel.HasValue)
+        {
+            query = query.Where(x => x.UrgencyLevel == criteria.UrgencyLevel.Value);
+        }
+
+        if (criteria.StartDateUtc.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt >= criteria.StartDateUtc.Value);
+        }
+
+        if (criteria.EndDateUtc.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt <= criteria.EndDateUtc.Value);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
 
+        var isDesc = sortOrder.Equals("desc", StringComparison.OrdinalIgnoreCase);
+        query = sortBy.ToLowerInvariant() switch
+        {
+            "updatedat" => isDesc ? query.OrderByDescending(x => x.UpdatedAt) : query.OrderBy(x => x.UpdatedAt),
+            "urgencylevel" => isDesc ? query.OrderByDescending(x => x.UrgencyLevel) : query.OrderBy(x => x.UrgencyLevel),
+            _ => isDesc ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt)
+        };
+
         var items = await query
-            .OrderByDescending(x => x.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
@@ -173,6 +202,20 @@ public class HandlerRepository : IHandlerRepository
             .Include(x => x.Handler)
             .Where(x => x.Handler.IsActive)
             .Select(x => x.Handler)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Handler>> GetByIdsAsync(
+        IReadOnlyCollection<int> handlerIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (handlerIds.Count == 0)
+        {
+            return new List<Handler>();
+        }
+
+        return await _context.Handlers
+            .Where(x => handlerIds.Contains(x.Id))
             .ToListAsync(cancellationToken);
     }
 }
