@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C5F4034-1E21-4478-A614-F216B03ED5FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CallTrackingSystem.Web", "src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj", "{010AA87F-0123-4F5E-9B7E-C699D72B4EA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CallTrackingSystem.Core", "src\CallTrackingSystem.Core\CallTrackingSystem.Core.csproj", "{67036AD2-E84A-4C07-BBD7-22D1C511D991}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CallTrackingSystem.Infrastructure", "src\CallTrackingSystem.Infrastructure\CallTrackingSystem.Infrastructure.csproj", "{0D26837F-57D8-4480-BCDC-B01B37B11FFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A6821B62-B55C-485F-AA1D-5D17A09E5F34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CallTrackingSystem.UnitTests", "tests\CallTrackingSystem.UnitTests\CallTrackingSystem.UnitTests.csproj", "{88C67858-307E-44DE-8489-B3E97221E5F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CallTrackingSystem.IntegrationTests", "tests\CallTrackingSystem.IntegrationTests\CallTrackingSystem.IntegrationTests.csproj", "{9AF794C6-F57C-4476-90B7-4A58A7195E9E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{010AA87F-0123-4F5E-9B7E-C699D72B4EA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{010AA87F-0123-4F5E-9B7E-C699D72B4EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{010AA87F-0123-4F5E-9B7E-C699D72B4EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{010AA87F-0123-4F5E-9B7E-C699D72B4EA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67036AD2-E84A-4C07-BBD7-22D1C511D991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67036AD2-E84A-4C07-BBD7-22D1C511D991}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67036AD2-E84A-4C07-BBD7-22D1C511D991}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67036AD2-E84A-4C07-BBD7-22D1C511D991}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D26837F-57D8-4480-BCDC-B01B37B11FFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D26837F-57D8-4480-BCDC-B01B37B11FFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D26837F-57D8-4480-BCDC-B01B37B11FFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D26837F-57D8-4480-BCDC-B01B37B11FFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88C67858-307E-44DE-8489-B3E97221E5F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88C67858-307E-44DE-8489-B3E97221E5F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88C67858-307E-44DE-8489-B3E97221E5F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88C67858-307E-44DE-8489-B3E97221E5F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AF794C6-F57C-4476-90B7-4A58A7195E9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AF794C6-F57C-4476-90B7-4A58A7195E9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AF794C6-F57C-4476-90B7-4A58A7195E9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AF794C6-F57C-4476-90B7-4A58A7195E9E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{010AA87F-0123-4F5E-9B7E-C699D72B4EA3} = {2C5F4034-1E21-4478-A614-F216B03ED5FC}
+		{67036AD2-E84A-4C07-BBD7-22D1C511D991} = {2C5F4034-1E21-4478-A614-F216B03ED5FC}
+		{0D26837F-57D8-4480-BCDC-B01B37B11FFA} = {2C5F4034-1E21-4478-A614-F216B03ED5FC}
+		{88C67858-307E-44DE-8489-B3E97221E5F4} = {A6821B62-B55C-485F-AA1D-5D17A09E5F34}
+		{9AF794C6-F57C-4476-90B7-4A58A7195E9E} = {A6821B62-B55C-485F-AA1D-5D17A09E5F34}
+	EndGlobalSection
+EndGlobal
