@@ -75,7 +75,7 @@ public class CallRecord
     /// <summary>
     /// 並發控制版本號（EF Core RowVersion）
     /// </summary>
-    public byte[] RowVersion { get; set; } = null!;
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     
     // ===== 導覽屬性 =====
     

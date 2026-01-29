@@ -28,5 +28,15 @@ public class ApplicationDbContext : DbContext
         
         // 自動套用所有 IEntityTypeConfiguration
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        
+        // SQLite RowVersion 處理（避免 NOT NULL 插入失敗）
+        if (Database.IsSqlite())
+        {
+            modelBuilder.Entity<CallTrackingSystem.Core.Entities.CallRecord>()
+                .Property(x => x.RowVersion)
+                .HasDefaultValueSql("randomblob(8)")
+                .IsConcurrencyToken()
+                .ValueGeneratedOnAddOrUpdate();
+        }
     }
 }
