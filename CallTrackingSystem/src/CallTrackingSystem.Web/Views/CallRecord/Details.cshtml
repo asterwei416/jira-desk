@@ -12,9 +12,10 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0">來電紀錄詳情</h2>
-                    <a href="/CallRecord/Index" class="btn btn-outline-secondary btn-sm">返回清單</a>
+                    <a href="/CallRecord/Index" class="btn btn-outline-secondary btn-sm" id="back-to-list">返回清單</a>
                 </div>
                 <hr />
+                <div id="lock-alert" class="alert alert-warning d-none" role="alert"></div>
                 <div id="detail-alert" class="alert alert-danger d-none" role="alert"></div>
                 <dl class="row" id="detail-content"></dl>
             </div>
@@ -53,10 +54,13 @@
         const callRecordId = "@callRecordId";
         const detailContent = $("#detail-content");
         const detailAlert = $("#detail-alert");
+        const lockAlert = $("#lock-alert");
         const detailLoading = $("#detail-loading");
         const currentStatus = $("#current-status");
         const historyList = $("#history-list");
         const historyEmpty = $("#history-empty");
+        const statusButtons = $("[data-status]");
+        let hasLock = false;
 
         function showLoading(show) {
             if (show) {
@@ -93,6 +97,43 @@
             `;
             detailContent.html(html);
             currentStatus.text(data.Status ?? data.status ?? "-");
+        }
+
+        function setLockState(locked, message) {
+            if (locked) {
+                lockAlert.removeClass("d-none").text(message || "此紀錄正在被其他使用者編輯中");
+                statusButtons.prop("disabled", true);
+            } else {
+                lockAlert.addClass("d-none").text("");
+                statusButtons.prop("disabled", false);
+            }
+        }
+
+        function acquireLock() {
+            $.ajax({
+                url: `/api/call-records/${callRecordId}/lock`,
+                method: "POST",
+                success: function () {
+                    hasLock = true;
+                    setLockState(false, "");
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.error || "此紀錄正在被其他使用者編輯中";
+                    hasLock = false;
+                    setLockState(true, message);
+                }
+            });
+        }
+
+        function releaseLock() {
+            if (!hasLock) return;
+            hasLock = false;
+
+            const url = `/api/call-records/${callRecordId}/lock`;
+            fetch(url, {
+                method: "DELETE",
+                keepalive: true
+            });
         }
 
         function renderHistory(items) {
@@ -152,6 +193,10 @@
         }
 
         $(document).on("click", "[data-status]", function () {
+            if (!hasLock) {
+                lockAlert.removeClass("d-none").text("未取得編輯鎖定，無法更新狀態");
+                return;
+            }
             const status = $(this).data("status");
             $.ajax({
                 url: `/api/call-records/${callRecordId}/status`,
@@ -171,6 +216,15 @@
 
         loadDetail();
         loadHistory();
+        acquireLock();
+
+        $("#back-to-list").on("click", function () {
+            releaseLock();
+        });
+
+        window.addEventListener("pagehide", function () {
+            releaseLock();
+        });
     })();
 </script>
 }
