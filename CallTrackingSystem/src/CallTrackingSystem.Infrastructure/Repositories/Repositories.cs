@@ -34,6 +34,7 @@ public class CallRecordRepository : ICallRecordRepository
         var query = _context.CallRecords
             .Include(x => x.InquirySystem)
             .Include(x => x.Handlers)
+            .AsNoTracking()
             .AsQueryable();
 
         // 搜尋條件
@@ -96,6 +97,7 @@ public class CallRecordRepository : ICallRecordRepository
         var query = _context.CallRecords
             .Include(x => x.InquirySystem)
             .Include(x => x.Handlers)
+            .AsNoTracking()
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(criteria.Keyword))
@@ -185,6 +187,7 @@ public class InquirySystemRepository : IInquirySystemRepository
     public async Task<List<InquirySystem>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.InquirySystems
+            .AsNoTracking()
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
@@ -192,6 +195,7 @@ public class InquirySystemRepository : IInquirySystemRepository
     public async Task<List<InquirySystem>> GetActiveSystemsAsync(CancellationToken cancellationToken = default)
     {
         return await _context.InquirySystems
+            .AsNoTracking()
             .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
@@ -259,6 +263,7 @@ public class HandlerRepository : IHandlerRepository
     public async Task<List<Handler>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Handlers
+            .AsNoTracking()
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
@@ -273,6 +278,7 @@ public class HandlerRepository : IHandlerRepository
         }
 
         return await _context.Handlers
+            .AsNoTracking()
             .Where(x => handlerIds.Contains(x.Id))
             .ToListAsync(cancellationToken);
     }
@@ -351,6 +357,7 @@ public class HandlerMappingRepository : IHandlerMappingRepository
         var query = _context.HandlerMappings
             .Include(x => x.Handler)
             .Include(x => x.InquirySystem)
+            .AsNoTracking()
             .AsQueryable();
 
         if (inquirySystemId.HasValue)
@@ -373,6 +380,7 @@ public class HandlerMappingRepository : IHandlerMappingRepository
         return await _context.HandlerMappings
             .Include(x => x.Handler)
             .Include(x => x.InquirySystem)
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -420,6 +428,7 @@ public class UserRepository : IUserRepository
     public async Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Users
+            .AsNoTracking()
             .OrderBy(x => x.Username)
             .ToListAsync(cancellationToken);
     }

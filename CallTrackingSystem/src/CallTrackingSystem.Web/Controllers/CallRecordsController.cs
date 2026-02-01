@@ -103,6 +103,19 @@ public class CallRecordsController : ControllerBase
     /// <response code="200">成功取得來電紀錄清單</response>
     /// <response code="400">請求參數無效</response>
     [HttpGet]
+    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[]
+    {
+        "keyword",
+        "inquirySystemId",
+        "status",
+        "urgencyLevel",
+        "startDate",
+        "endDate",
+        "pageNumber",
+        "pageSize",
+        "sortBy",
+        "sortOrder"
+    })]
     [ProducesResponseType(typeof(PagedResult<CallRecordListItemResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCallRecords(

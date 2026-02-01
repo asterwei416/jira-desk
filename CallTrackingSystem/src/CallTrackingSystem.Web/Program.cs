@@ -23,6 +23,7 @@ builder.Services.AddControllersWithViews()
     });
 
 builder.Services.AddHttpClient();
+builder.Services.AddResponseCaching();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -124,6 +125,8 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseResponseCaching();
 
 // 啟用 Controllers
 app.MapControllers();
