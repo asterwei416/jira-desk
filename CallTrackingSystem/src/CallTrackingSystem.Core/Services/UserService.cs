@@ -87,4 +87,19 @@ public class UserService : IUserService
         await _userRepository.UpdateAsync(user, cancellationToken);
         return user;
     }
+
+    public async Task<User> UnbindLineAccountAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user == null)
+        {
+            throw new InvalidOperationException("使用者不存在");
+        }
+
+        user.UnbindLineAccount();
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        return user;
+    }
 }

@@ -62,3 +62,20 @@ public record BindLineAccountRequest
     public required string LineUserId { get; init; }
     public required string DisplayName { get; init; }
 }
+
+/// <summary>
+/// LINE 解除綁定請求
+/// </summary>
+public record UnbindLineAccountRequest
+{
+    public required string UserId { get; init; }
+}
+
+/// <summary>
+/// LINE Login 使用者資料
+/// </summary>
+public record LineLoginProfile
+{
+    public required string LineUserId { get; init; }
+    public required string DisplayName { get; init; }
+}

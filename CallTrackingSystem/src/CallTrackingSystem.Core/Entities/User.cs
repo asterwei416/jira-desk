@@ -84,6 +84,11 @@ public class User
         
         LineUserId = lineUserId.Trim();
     }
+
+    public void UnbindLineAccount()
+    {
+        LineUserId = null;
+    }
     
     public void ChangePassword(string newPasswordHash)
     {

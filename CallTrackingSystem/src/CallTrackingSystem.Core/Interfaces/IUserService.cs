@@ -14,4 +14,5 @@ public interface IUserService
     Task<User> CreateAsync(string username, string password, string name, UserRole role, CancellationToken cancellationToken = default);
     Task<User> UpdateAsync(string userId, string name, CancellationToken cancellationToken = default);
     Task<User> BindLineAccountAsync(string userId, string lineUserId, CancellationToken cancellationToken = default);
+    Task<User> UnbindLineAccountAsync(string userId, CancellationToken cancellationToken = default);
 }
