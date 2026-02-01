@@ -1,5 +1,10 @@
 @model SearchFilterModel
 
+<button class="btn btn-outline-primary d-md-none mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#searchCollapse" aria-expanded="false" aria-controls="searchCollapse">
+    篩選條件
+</button>
+
+<div class="collapse d-md-block" id="searchCollapse">
 <form id="search-form" class="row g-3">
     <div class="col-md-4">
         <label class="form-label">關鍵字</label>
@@ -70,3 +75,4 @@
         <button type="button" id="reset-button" class="btn btn-outline-secondary">重設</button>
     </div>
 </form>
+</div>

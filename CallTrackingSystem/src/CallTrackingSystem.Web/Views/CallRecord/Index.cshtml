@@ -30,7 +30,7 @@
                 </div>
                 <div id="result-alert" class="alert alert-danger d-none" role="alert"></div>
 
-                <div class="table-responsive">
+                <div class="table-responsive d-none d-md-block">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
@@ -51,6 +51,10 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="d-block d-md-none" id="result-cards">
+                    <div class="text-center text-muted">尚未載入資料</div>
                 </div>
 
                 <nav aria-label="分頁" class="mt-3">
@@ -122,8 +126,11 @@
         }
 
         function renderTable(items) {
+            const cardContainer = $("#result-cards");
+
             if (!items || items.length === 0) {
                 resultBody.html('<tr><td colspan="9" class="text-center text-muted">查無資料</td></tr>');
+                cardContainer.html('<div class="text-center text-muted">查無資料</div>');
                 return;
             }
 
@@ -142,7 +149,28 @@
                 </tr>`;
             }).join("");
 
+            const cards = items.map(item => {
+                return `<div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-semibold">${item.Subject ?? item.subject}</div>
+                                <div class="text-muted small">${formatDate(item.CreatedAt ?? item.createdAt)}</div>
+                            </div>
+                            <div>${statusBadge(item.Status ?? item.status)}</div>
+                        </div>
+                        <div class="mb-1"><span class="text-muted">詢問系統：</span>${item.InquirySystemName ?? item.inquirySystemName ?? "-"}</div>
+                        <div class="mb-1"><span class="text-muted">緊急度：</span>${urgencyLabel(item.UrgencyLevel ?? item.urgencyLevel)}</div>
+                        <div class="mb-1"><span class="text-muted">處理人：</span>${item.HandlerCount ?? item.handlerCount ?? 0}</div>
+                        <div class="mb-1"><span class="text-muted">聯絡人：</span>${item.ContactName ?? item.contactName}</div>
+                        <div class="mb-2"><span class="text-muted">更新時間：</span>${formatDate(item.UpdatedAt ?? item.updatedAt)}</div>
+                        <a class="btn btn-sm btn-outline-primary w-100" href="/CallRecord/Details/${item.Id ?? item.id}">查看</a>
+                    </div>
+                </div>`;
+            }).join("");
+
             resultBody.html(rows);
+            cardContainer.html(cards);
         }
 
         function renderPagination(pageNumber, totalPages) {
