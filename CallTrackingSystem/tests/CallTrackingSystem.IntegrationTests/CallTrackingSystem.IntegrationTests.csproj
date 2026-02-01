@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CallTrackingSystem.Core\CallTrackingSystem.Core.csproj" />
     <ProjectReference Include="..\..\src\CallTrackingSystem.Infrastructure\CallTrackingSystem.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj" />
   </ItemGroup>
 
 </Project>
