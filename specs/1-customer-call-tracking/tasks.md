@@ -122,17 +122,17 @@
 
 #### 認證與授權
 
-- [ ] T016 [P] 建立 JWT Token Service
+- [x] T016 [P] 建立 JWT Token Service
   - 在 `Infrastructure/Services/JwtTokenService.cs` 實作 Token 生成和驗證
   - 介面定義在 `Core/Interfaces/IJwtTokenService.cs`
   - 包含方法: `GenerateToken(User user)`, `ValidateToken(string token)`
 
-- [ ] T017 [P] 設定 JWT 認證中介軟體
+- [x] T017 [P] 設定 JWT 認證中介軟體
   - 在 `Program.cs` 註冊 `AddAuthentication()` 和 `AddJwtBearer()`
   - 設定 Token 驗證參數（SecretKey、Issuer、Audience）
   - 啟用 `UseAuthentication()` 和 `UseAuthorization()`
 
-- [ ] T018 [P] 建立授權原則
+- [x] T018 [P] 建立授權原則
   - 定義 Admin 和 Staff 角色原則
   - 在 `Program.cs` 註冊授權原則
 
@@ -182,13 +182,13 @@
   - 實作方法: `GetHandlersByInquirySystemIdAsync()`
   - 用於自動指派處理人員
 
-- [ ] T024 [P] [US1] 建立 LINE 通知 Service
+- [x] T024 [P] [US1] 建立 LINE 通知 Service
   - 在 `Infrastructure/Services/LineNotificationService.cs` 建立 Service
   - 介面定義在 `Core/Interfaces/ILineNotificationService.cs`
   - 實作方法: `SendCallRecordNotificationAsync()` 使用 Flex Message 格式
   - 實作失敗記錄到 NotificationLog
 
-- [ ] T025 [US1] CallRecordService 整合 LINE 通知
+- [x] T025 [US1] CallRecordService 整合 LINE 通知
   - 在 `CreateAsync()` 方法中呼叫 LINE 通知 Service
   - 僅首次建立時發送，編輯時不發送
   - 捕捉通知例外，不阻塞主流程
@@ -200,7 +200,7 @@
   - 介面定義在 `Core/Interfaces/ICallRecordRepository.cs`
   - 覆寫方法加入 Include 導覽屬性（InquirySystem, Handlers）
 
-- [ ] T027 [P] [US1] 建立 HandlerMappingRepository
+- [x] T027 [P] [US1] 建立 HandlerMappingRepository
   - 在 `Infrastructure/Repositories/HandlerMappingRepository.cs` 建立 Repository
   - 實作方法: `GetByInquirySystemIdAsync()`
 
@@ -234,7 +234,7 @@
 
 #### 前端 MVC Views（選配）
 
-- [ ] T033 [P] [US1] 建立 CallRecordController（MVC）
+- [x] T033 [P] [US1] 建立 CallRecordController（MVC）
   - 在 `Web/Controllers/CallRecordController.cs` 建立 MVC Controller
   - 路由: `/CallRecord/`
 
@@ -248,7 +248,7 @@
   - 檢查編輯鎖定狀態，顯示鎖定提示
   - RowVersion 隱藏欄位傳遞
 
-- [ ] T036 [P] [US1] 建立紀錄詳情 View
+- [x] T036 [P] [US1] 建立紀錄詳情 View
   - 在 `Web/Views/CallRecord/Details.cshtml` 建立頁面
   - 顯示所有欄位和變更歷史
   - 提供編輯、刪除按鈕（依權限顯示）
@@ -520,12 +520,12 @@
 
 #### 測試
 
-- [ ] T073 [P] [US5] ReportService 單元測試
+- [x] T073 [P] [US5] ReportService 單元測試
   - 測試 Excel 生成（使用測試資料）
   - 驗證三個工作表內容正確
   - 驗證月份統計正確
 
-- [ ] T074 [P] [US5] 報表匯出整合測試
+- [x] T074 [P] [US5] 報表匯出整合測試
   - 測試完整匯出流程
   - 測試超過 5000 筆限制回應
 
@@ -545,13 +545,13 @@
 
 #### 後端 Service 層
 
-- [ ] T075 [US6] 建立 EditLockManager
+- [x] T075 [US6] 建立 EditLockManager
   - 在 `Core/Services/EditLockManager.cs` 建立 Service
   - 實作 `AcquireLockAsync(int recordId, string userId)` 方法
   - 實作 `ReleaseLockAsync(int recordId, string userId)` 方法
   - 實作 `ForceUnlockAsync(int recordId)` 方法（僅 Admin）
 
-- [ ] T076 [US6] 建立背景清理服務
+- [x] T076 [US6] 建立背景清理服務
   - 在 `Infrastructure/Services/EditLockCleanupService.cs` 建立 Hosted Service
   - 繼承 `BackgroundService`
   - 每 5 分鐘執行一次，清理過期鎖定（30 分鐘無操作）
@@ -566,29 +566,29 @@
 - [x] T078 [P] [US6] 實作 DELETE /api/call-records/{id}/lock（釋放鎖定）
   - 成功回傳 204 No Content
 
-- [ ] T079 [P] [US6] 實作強制解鎖端點（僅 Admin）
+- [x] T079 [P] [US6] 實作強制解鎖端點（僅 Admin）
   - POST /api/admin/call-records/{id}/force-unlock
   - 記錄強制解鎖日誌
 
 #### 前端 MVC Views
 
-- [ ] T080 [US6] 在編輯頁面加入鎖定邏輯
+- [x] T080 [US6] 在編輯頁面加入鎖定邏輯
   - 頁面載入時呼叫 `AcquireLockAsync()`
   - 成功則允許編輯，失敗則顯示唯讀提示
   - 儲存或關閉時呼叫 `ReleaseLockAsync()`
 
-- [ ] T081 [US6] 在紀錄詳情頁面顯示鎖定狀態
+- [x] T081 [US6] 在紀錄詳情頁面顯示鎖定狀態
   - 顯示「正在被 XXX 編輯中」提示
   - Admin 顯示「強制解鎖」按鈕
 
 #### 測試
 
-- [ ] T082 [P] [US6] EditLockManager 單元測試
+- [x] T082 [P] [US6] EditLockManager 單元測試
   - 測試取得鎖定成功/失敗
   - 測試釋放鎖定
   - 測試過期檢查邏輯
 
-- [ ] T083 [P] [US6] 背景清理服務測試
+- [x] T083 [P] [US6] 背景清理服務測試
   - 測試自動清理過期鎖定
   - 測試不清理未過期鎖定
 
@@ -612,73 +612,73 @@
 
 #### 後端 Service 層
 
-- [ ] T085 [P] 建立 AuthService
+- [x] T085 [P] 建立 AuthService
   - 在 `Core/Services/AuthService.cs` 建立 Service
   - 實作 `LoginAsync(username, password)` 方法（驗證並生成 JWT）
   - 實作 `ChangePasswordAsync(userId, oldPassword, newPassword)` 方法
 
-- [ ] T086 [P] 建立 UserService
+- [x] T086 [P] 建立 UserService
   - 在 `Core/Services/UserService.cs` 建立 Service
   - 實作 `GetByUsernameAsync()`, `GetByLineUserIdAsync()`, `CreateAsync()`, `UpdateAsync()`
   - 實作 `BindLineAccountAsync(userId, lineUserId, role)` 方法
 
 #### Repository 層
 
-- [ ] T087 [P] 建立 UserRepository
+- [x] T087 [P] 建立 UserRepository
   - 在 `Infrastructure/Repositories/UserRepository.cs` 建立 Repository
   - 實作查詢方法: `GetByUsernameAsync()`, `GetByLineUserIdAsync()`
 
 #### LINE Login 整合
 
-- [ ] T088 設定 LINE Login OAuth 2.0
+- [x] T088 設定 LINE Login OAuth 2.0
   - 在 Program.cs 註冊 `AddOAuth("Line", options => { ... })`
   - 設定 Authorization Endpoint, Token Endpoint, UserInformation Endpoint
   - 設定 Callback URL: `/api/auth/line/callback`
 
-- [ ] T089 實作 LINE Login 流程
+- [x] T089 實作 LINE Login 流程
   - GET /api/auth/line/login: 重定向到 LINE 授權頁面
   - GET /api/auth/line/callback: 處理回調，交換 Code 取得 Token，取得使用者資料
   - 檢查 LINE User ID 是否已綁定，未綁定則導向綁定頁面
 
-- [ ] T090 實作 LINE 帳號綁定審核流程
+- [x] T090 實作 LINE 帳號綁定審核流程
   - POST /api/auth/line/bind: 管理者批准綁定（Request: `userId`, `lineUserId`, `role`）
   - POST /api/auth/line/unbind: 管理者解除綁定
 
 #### Web API 層
 
-- [ ] T091 [P] 實作 POST /api/auth/login（內建帳號登入）
+- [x] T091 [P] 實作 POST /api/auth/login（內建帳號登入）
   - Request: `{ "username": "admin", "password": "Admin@123" }`
   - Response: `{ "accessToken": "...", "expiresIn": 86400, "user": { ... } }`
   - 驗證帳號密碼，生成 JWT Token
 
-- [ ] T092 [P] 實作 POST /api/auth/logout（登出）
+- [x] T092 [P] 實作 POST /api/auth/logout（登出）
   - Client-side 清除 Token 即可，Server 端無狀態
 
-- [ ] T093 [P] 實作 GET /api/auth/profile（查詢個人資料）
+- [x] T093 [P] 實作 GET /api/auth/profile（查詢個人資料）
   - 需認證
   - Response: `UserProfile`
 
-- [ ] T094 [P] 實作 PUT /api/auth/profile（更新個人資料）
+- [x] T094 [P] 實作 PUT /api/auth/profile（更新個人資料）
   - Request: `{ "name": "新名稱" }`
   - 只能更新自己的資料
 
-- [ ] T095 [P] 實作 POST /api/auth/change-password（變更密碼）
+- [x] T095 [P] 實作 POST /api/auth/change-password（變更密碼）
   - Request: `{ "oldPassword": "...", "newPassword": "..." }`
   - 驗證舊密碼正確性
 
 #### 前端 MVC Views
 
-- [ ] T096 [P] 建立登入頁面
+- [x] T096 [P] 建立登入頁面
   - 在 `Web/Views/Auth/Login.cshtml` 建立頁面
   - 內建帳號登入表單 + LINE Login 按鈕
 
-- [ ] T097 [P] 建立 LINE 帳號綁定頁面（管理者專用）
+- [x] T097 [P] 建立 LINE 帳號綁定頁面（管理者專用）
   - 在 `Web/Views/Auth/Bind.cshtml` 建立頁面
   - 顯示 LINE User ID、Display Name
   - 選擇要綁定的系統帳號或建立新帳號
   - 指派角色（Admin / Staff）
 
-- [ ] T098 [P] 建立個人資料頁面
+- [x] T098 [P] 建立個人資料頁面
   - 在 `Web/Views/Auth/Profile.cshtml` 建立頁面
   - 顯示使用者資訊
   - 提供密碼變更表單
@@ -692,11 +692,11 @@
 
 #### 測試
 
-- [ ] T100 [P] AuthService 單元測試
+- [x] T100 [P] AuthService 單元測試
   - 測試登入成功/失敗
   - 測試密碼變更
 
-- [ ] T101 [P] LINE Login 整合測試
+- [x] T101 [P] LINE Login 整合測試
   - 測試 OAuth 流程（需 Mock LINE API）
   - 測試綁定流程
 
@@ -716,48 +716,48 @@
 
 #### 後端 Service 層
 
-- [ ] T102 [P] 建立 InquirySystemService
+- [x] T102 [P] 建立 InquirySystemService
   - 實作 CRUD 方法: `GetAllAsync()`, `CreateAsync()`, `UpdateAsync()`, `DeleteAsync()`
   - 刪除前檢查是否有關聯的 CallRecord
 
-- [ ] T103 [P] 建立 HandlerService
+- [x] T103 [P] 建立 HandlerService
   - 實作 CRUD 方法和啟用/停用方法
 
-- [ ] T104 [P] 建立 HandlerMappingService（完整版）
+- [x] T104 [P] 建立 HandlerMappingService（完整版）
   - 實作 `CreateMappingAsync()`, `DeleteMappingAsync()`, `GetMappingsAsync()`
 
-- [ ] T105 [P] 建立 UserManagementService
+- [x] T105 [P] 建立 UserManagementService
   - 實作 CRUD 方法（僅 Admin 可呼叫）
   - 實作 `ResetPasswordAsync()` 方法
 
 #### Repository 層
 
-- [ ] T106 [P] 建立 InquirySystemRepository
+- [x] T106 [P] 建立 InquirySystemRepository
   - 實作查詢方法
 
-- [ ] T107 [P] 建立 HandlerRepository
+- [x] T107 [P] 建立 HandlerRepository
   - 實作查詢方法
 
 #### Web API 層（Admin 專用）
 
-- [ ] T108 [P] 實作詢問系統管理 API
+- [x] T108 [P] 實作詢問系統管理 API
   - GET /api/admin/inquiry-systems
   - POST /api/admin/inquiry-systems
   - PUT /api/admin/inquiry-systems/{id}
   - DELETE /api/admin/inquiry-systems/{id}
 
-- [ ] T109 [P] 實作處理人員管理 API
+- [x] T109 [P] 實作處理人員管理 API
   - GET /api/admin/handlers
   - POST /api/admin/handlers
   - PUT /api/admin/handlers/{id}
   - DELETE /api/admin/handlers/{id}
 
-- [ ] T110 [P] 實作處理人員對應管理 API
+- [x] T110 [P] 實作處理人員對應管理 API
   - GET /api/admin/handler-mappings
   - POST /api/admin/handler-mappings
   - DELETE /api/admin/handler-mappings/{id}
 
-- [ ] T111 [P] 實作使用者管理 API
+- [x] T111 [P] 實作使用者管理 API
   - GET /api/admin/users
   - POST /api/admin/users
   - PUT /api/admin/users/{id}
@@ -766,29 +766,29 @@
 
 #### 前端 MVC Views（Admin 專用）
 
-- [ ] T112 [P] 建立詢問系統管理頁面
+- [x] T112 [P] 建立詢問系統管理頁面
   - 在 `Web/Views/Admin/InquirySystems.cshtml` 建立頁面
   - CRUD 操作 + 排序功能
 
-- [ ] T113 [P] 建立處理人員管理頁面
+- [x] T113 [P] 建立處理人員管理頁面
   - 在 `Web/Views/Admin/Handlers.cshtml` 建立頁面
   - CRUD 操作
 
-- [ ] T114 [P] 建立處理人員對應管理頁面
+- [x] T114 [P] 建立處理人員對應管理頁面
   - 在 `Web/Views/Admin/HandlerMappings.cshtml` 建立頁面
   - 顯示對應關係表
   - 新增/刪除對應
 
-- [ ] T115 [P] 建立使用者管理頁面
+- [x] T115 [P] 建立使用者管理頁面
   - 在 `Web/Views/Admin/Users.cshtml` 建立頁面
   - CRUD 操作 + 重設密碼
 
 #### 測試
 
-- [ ] T116 [P] 管理功能單元測試
+- [x] T116 [P] 管理功能單元測試
   - 測試各 Service 的 CRUD 方法
 
-- [ ] T117 [P] 管理 API 整合測試
+- [x] T117 [P] 管理 API 整合測試
   - 測試權限控制（僅 Admin 可存取）
 
 ---
@@ -804,16 +804,16 @@
 
 ### 任務清單
 
-- [ ] T118 [P] 建立響應式 CSS 樣式
+- [x] T118 [P] 建立響應式 CSS 樣式
   - 使用 Bootstrap 5 響應式 Grid
   - 定義 Breakpoints: 768px, 1280px
 
-- [ ] T119 [P] 實作清單響應式切換
+- [x] T119 [P] 實作清單響應式切換
   - 桌面: 表格式（`<table>`）
   - 手機: 卡片式（`<div class="card">`）
   - 使用 CSS Media Query 或 Bootstrap 類別
 
-- [ ] T120 [P] 實作搜尋表單摺疊功能
+- [x] T120 [P] 實作搜尋表單摺疊功能
   - 手機版預設摺疊，點擊「篩選」按鈕展開
   - 使用 Bootstrap Collapse 元件
 
@@ -836,31 +836,31 @@
 
 #### 效能優化
 
-- [ ] T122 啟用回應快取
+- [x] T122 啟用回應快取
   - 在 Program.cs 註冊 `AddResponseCaching()`
   - 為搜尋 API 加入 `[ResponseCache]` 屬性
 
-- [ ] T123 資料庫查詢優化
+- [x] T123 資料庫查詢優化
   - 檢查慢查詢（使用 SQL Profiler 或 Azure SQL Insights）
   - 調整索引策略
   - 使用 `.AsNoTracking()` 優化唯讀查詢
 
-- [ ] T124 實作分頁最佳化
+- [x] T124 實作分頁最佳化
   - 使用 `Skip()` 和 `Take()` 避免載入全部資料
   - 限制最大每頁筆數（100 筆）
 
 #### 測試與品質
 
-- [ ] T125 執行完整測試套件
+- [x] T125 執行完整測試套件
   - 單元測試
   - 整合測試
   - API 測試
 
-- [ ] T126 測試覆蓋率報告
+- [x] T126 測試覆蓋率報告
   - 執行 `dotnet test --collect:"XPlat Code Coverage"`
   - 檢查覆蓋率 ≥ 80%
 
-- [ ] T127 安全性檢查
+- [x] T127 安全性檢查
   - SQL Injection 防護（使用參數化查詢）
   - XSS 防護（使用 Razor 自動編碼）
   - CSRF 防護（AntiForgeryToken）
