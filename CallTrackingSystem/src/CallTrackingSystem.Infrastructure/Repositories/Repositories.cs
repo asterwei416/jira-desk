@@ -175,12 +175,58 @@ public class InquirySystemRepository : IInquirySystemRepository
         return await _context.InquirySystems.FindAsync(new object[] { id }, cancellationToken);
     }
 
+    public async Task<InquirySystem?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var normalized = name.Trim();
+        return await _context.InquirySystems
+            .FirstOrDefaultAsync(x => x.Name == normalized, cancellationToken);
+    }
+
+    public async Task<List<InquirySystem>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.InquirySystems
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<InquirySystem>> GetActiveSystemsAsync(CancellationToken cancellationToken = default)
     {
         return await _context.InquirySystems
             .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<InquirySystem> AddAsync(InquirySystem inquirySystem, CancellationToken cancellationToken = default)
+    {
+        _context.InquirySystems.Add(inquirySystem);
+        await _context.SaveChangesAsync(cancellationToken);
+        return inquirySystem;
+    }
+
+    public async Task UpdateAsync(InquirySystem inquirySystem, CancellationToken cancellationToken = default)
+    {
+        _context.InquirySystems.Update(inquirySystem);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(InquirySystem inquirySystem, CancellationToken cancellationToken = default)
+    {
+        _context.InquirySystems.Remove(inquirySystem);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var normalized = name.Trim();
+        return await _context.InquirySystems
+            .AnyAsync(x => x.Name == normalized, cancellationToken);
+    }
+
+    public async Task<bool> HasCallRecordsAsync(int inquirySystemId, CancellationToken cancellationToken = default)
+    {
+        return await _context.CallRecords
+            .AnyAsync(x => x.InquirySystemId == inquirySystemId, cancellationToken);
     }
 }
 

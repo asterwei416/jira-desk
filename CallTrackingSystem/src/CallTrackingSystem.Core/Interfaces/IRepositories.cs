@@ -60,11 +60,46 @@ public interface IInquirySystemRepository
     /// 根據 ID 取得詢問系統
     /// </summary>
     Task<InquirySystem?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根據名稱取得詢問系統
+    /// </summary>
+    Task<InquirySystem?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     
+    /// <summary>
+    /// 取得所有詢問系統
+    /// </summary>
+    Task<List<InquirySystem>> GetAllAsync(CancellationToken cancellationToken = default);
+
     /// <summary>
     /// 取得所有啟用的詢問系統
     /// </summary>
     Task<List<InquirySystem>> GetActiveSystemsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 新增詢問系統
+    /// </summary>
+    Task<InquirySystem> AddAsync(InquirySystem inquirySystem, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新詢問系統
+    /// </summary>
+    Task UpdateAsync(InquirySystem inquirySystem, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 刪除詢問系統
+    /// </summary>
+    Task DeleteAsync(InquirySystem inquirySystem, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 檢查名稱是否已存在
+    /// </summary>
+    Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 檢查是否仍有來電紀錄使用此系統
+    /// </summary>
+    Task<bool> HasCallRecordsAsync(int inquirySystemId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
