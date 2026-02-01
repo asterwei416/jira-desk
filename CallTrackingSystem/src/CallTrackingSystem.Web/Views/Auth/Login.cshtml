@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "登入";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="card p-4">
+            <h2 class="h5 mb-3">系統登入</h2>
+            <div class="alert alert-danger d-none" id="loginError"></div>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label" for="username">帳號</label>
+                    <input class="form-control" id="username" name="username" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="password">密碼</label>
+                    <input class="form-control" id="password" name="password" type="password" required />
+                </div>
+                <button class="btn btn-primary w-100" type="submit">登入</button>
+            </form>
+            <hr class="my-4" />
+            <a class="btn btn-outline-success w-100" href="/api/auth/line/login">使用 LINE Login 登入</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#loginForm').on('submit', function (e) {
+                e.preventDefault();
+                $('#loginError').addClass('d-none').text('');
+
+                const payload = {
+                    username: $('#username').val(),
+                    password: $('#password').val()
+                };
+
+                fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(async response => {
+                    if (!response.ok) {
+                        const result = await response.json();
+                        throw new Error(result?.error || '登入失敗');
+                    }
+                    return response.json();
+                }).then(result => {
+                    localStorage.setItem('accessToken', result.accessToken);
+                    window.location.href = '/CallRecord/Index';
+                }).catch(err => {
+                    $('#loginError').removeClass('d-none').text(err.message);
+                });
+            });
+        });
+    </script>
+}

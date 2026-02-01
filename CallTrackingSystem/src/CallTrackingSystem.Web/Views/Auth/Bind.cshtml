@@ -1,0 +1,68 @@
+@model CallTrackingSystem.Web.Models.BindLineAccountViewModel
+
+@{
+    ViewData["Title"] = "LINE 綁定";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card p-4">
+            <h2 class="h5 mb-3">LINE 帳號綁定</h2>
+            <div class="alert alert-info">
+                LINE 使用者：@Model.DisplayName (@Model.LineUserId)
+            </div>
+            <div class="alert alert-danger d-none" id="bindError"></div>
+            <div class="alert alert-success d-none" id="bindSuccess"></div>
+            <form id="bindForm">
+                <div class="mb-3">
+                    <label class="form-label" for="userId">系統使用者 ID</label>
+                    <input class="form-control" id="userId" name="userId" required />
+                </div>
+                <button class="btn btn-primary w-100" type="submit">送出綁定</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#bindForm').on('submit', function (e) {
+                e.preventDefault();
+                $('#bindError').addClass('d-none').text('');
+                $('#bindSuccess').addClass('d-none').text('');
+
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    $('#bindError').removeClass('d-none').text('請先登入管理者帳號');
+                    return;
+                }
+
+                const payload = {
+                    userId: $('#userId').val(),
+                    lineUserId: '@Model.LineUserId',
+                    displayName: '@Model.DisplayName'
+                };
+
+                fetch('/api/auth/line/bind', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                }).then(async response => {
+                    if (!response.ok) {
+                        const result = await response.json();
+                        throw new Error(result?.error || '綁定失敗');
+                    }
+                    return response.json();
+                }).then(() => {
+                    $('#bindSuccess').removeClass('d-none').text('LINE 帳號綁定成功');
+                }).catch(err => {
+                    $('#bindError').removeClass('d-none').text(err.message);
+                });
+            });
+        });
+    </script>
+}
