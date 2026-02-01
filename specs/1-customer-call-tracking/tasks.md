@@ -873,11 +873,11 @@
   - 建立 Application Pool (No Managed Code)
   - 設定檔案權限
 
-- [ ] T129 發佈專案
+- [x] T129 發佈專案
   - 執行 `dotnet publish -c Release -o ./publish`
   - 複製檔案到 IIS 實體路徑
 
-- [ ] T130 設定 web.config
+- [x] T130 設定 web.config
   - 設定 In-Process Hosting Model
   - 設定環境變數 `ASPNETCORE_ENVIRONMENT=Production`
   - 啟用 stdout 日誌
