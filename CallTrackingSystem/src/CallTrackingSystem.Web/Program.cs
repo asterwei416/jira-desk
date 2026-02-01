@@ -51,6 +51,7 @@ builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
 builder.Services.AddScoped<INotificationLogService, NotificationLogService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILineNotificationService, CallTrackingSystem.Infrastructure.Services.LineNotificationService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
 // 註冊背景服務
