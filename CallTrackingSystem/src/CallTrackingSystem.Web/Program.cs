@@ -50,6 +50,7 @@ builder.Services.AddScoped<IEditLockManager, EditLockManager>();
 builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
 builder.Services.AddScoped<INotificationLogService, NotificationLogService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILineNotificationService, CallTrackingSystem.Infrastructure.Services.LineNotificationService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IReportService, ReportService>();
