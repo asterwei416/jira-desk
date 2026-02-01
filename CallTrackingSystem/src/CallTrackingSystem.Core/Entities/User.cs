@@ -76,6 +76,11 @@ public class User
         
         Name = name.Trim();
     }
+
+    public void UpdateRole(UserRole role)
+    {
+        Role = role;
+    }
     
     public void BindLineAccount(string lineUserId)
     {

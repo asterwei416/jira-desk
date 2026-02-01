@@ -417,6 +417,13 @@ public class UserRepository : IUserRepository
             cancellationToken);
     }
 
+    public async Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .OrderBy(x => x.Username)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User?> GetByLineUserIdAsync(string lineUserId, CancellationToken cancellationToken = default)
     {
         return await _context.Users.FirstOrDefaultAsync(
@@ -434,6 +441,12 @@ public class UserRepository : IUserRepository
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         _context.Users.Update(user);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(User user, CancellationToken cancellationToken = default)
+    {
+        _context.Users.Remove(user);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

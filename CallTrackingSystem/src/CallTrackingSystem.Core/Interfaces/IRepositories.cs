@@ -211,6 +211,11 @@ public interface IUserRepository
     Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 取得所有使用者
+    /// </summary>
+    Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 根據 LINE User ID 取得使用者
     /// </summary>
     Task<User?> GetByLineUserIdAsync(string lineUserId, CancellationToken cancellationToken = default);
@@ -224,6 +229,11 @@ public interface IUserRepository
     /// 更新使用者
     /// </summary>
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 刪除使用者
+    /// </summary>
+    Task DeleteAsync(User user, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
