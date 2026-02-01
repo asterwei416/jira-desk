@@ -1,0 +1,195 @@
+@{
+    ViewData["Title"] = "使用者管理";
+}
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card p-4 mb-4">
+            <h2 class="h5 mb-3">新增使用者</h2>
+            <div class="alert alert-danger d-none" id="createError"></div>
+            <form id="createForm">
+                <div class="mb-3">
+                    <label class="form-label" for="username">帳號</label>
+                    <input class="form-control" id="username" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="password">初始密碼</label>
+                    <input class="form-control" id="password" type="password" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="name">姓名</label>
+                    <input class="form-control" id="name" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="role">角色</label>
+                    <select class="form-select" id="role">
+                        <option value="Staff">Staff</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">新增</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">使用者清單</h2>
+                <button class="btn btn-outline-secondary btn-sm" id="refreshBtn">重新整理</button>
+            </div>
+            <div class="alert alert-danger d-none" id="listError"></div>
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>帳號</th>
+                        <th>姓名</th>
+                        <th>角色</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="userTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getToken() { return localStorage.getItem('accessToken'); }
+
+        function renderRow(item) {
+            const statusBadge = item.isActive
+                ? '<span class="badge bg-success">啟用</span>'
+                : '<span class="badge bg-secondary">停用</span>';
+
+            return `<tr>
+                <td>${item.username}</td>
+                <td>${item.name}</td>
+                <td>${item.role}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${item.id}">編輯</button>
+                    <button class="btn btn-sm btn-outline-secondary" data-action="reset" data-id="${item.id}">重設密碼</button>
+                    <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${item.id}">刪除</button>
+                </td>
+            </tr>`;
+        }
+
+        function loadUsers() {
+            const token = getToken();
+            if (!token) {
+                $('#listError').removeClass('d-none').text('請先登入管理者帳號');
+                return;
+            }
+
+            fetch('/api/admin/users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(async response => {
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result?.error || '載入失敗');
+                }
+                return response.json();
+            }).then(items => {
+                $('#userTable').html(items.map(renderRow).join(''));
+            }).catch(err => {
+                $('#listError').removeClass('d-none').text(err.message);
+            });
+        }
+
+        $(function () {
+            loadUsers();
+            $('#refreshBtn').on('click', loadUsers);
+
+            $('#createForm').on('submit', function (e) {
+                e.preventDefault();
+                $('#createError').addClass('d-none').text('');
+
+                const token = getToken();
+                if (!token) {
+                    $('#createError').removeClass('d-none').text('請先登入管理者帳號');
+                    return;
+                }
+
+                fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        username: $('#username').val(),
+                        password: $('#password').val(),
+                        name: $('#name').val(),
+                        role: $('#role').val()
+                    })
+                }).then(async response => {
+                    if (!response.ok) {
+                        const result = await response.json();
+                        throw new Error(result?.error || '新增失敗');
+                    }
+                    return response.json();
+                }).then(() => {
+                    $('#username').val('');
+                    $('#password').val('');
+                    $('#name').val('');
+                    $('#role').val('Staff');
+                    loadUsers();
+                }).catch(err => {
+                    $('#createError').removeClass('d-none').text(err.message);
+                });
+            });
+
+            $('#userTable').on('click', 'button[data-action]', function () {
+                const action = $(this).data('action');
+                const id = $(this).data('id');
+                const token = getToken();
+
+                if (!token) {
+                    alert('請先登入管理者帳號');
+                    return;
+                }
+
+                if (action === 'edit') {
+                    const row = $(this).closest('tr');
+                    const name = prompt('姓名', row.find('td').eq(1).text());
+                    if (name === null) { return; }
+                    const role = prompt('角色 (Staff/Admin)', row.find('td').eq(2).text());
+                    if (role === null) { return; }
+                    const isActive = row.find('td').eq(3).find('.badge').hasClass('bg-success');
+
+                    fetch(`/api/admin/users/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ name: name, role: role, isActive: isActive })
+                    }).then(loadUsers);
+                }
+
+                if (action === 'reset') {
+                    const newPassword = prompt('輸入新密碼');
+                    if (!newPassword) { return; }
+
+                    fetch(`/api/admin/users/${id}/reset-password`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ newPassword: newPassword })
+                    }).then(loadUsers);
+                }
+
+                if (action === 'delete') {
+                    fetch(`/api/admin/users/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(loadUsers);
+                }
+            });
+        });
+    </script>
+}

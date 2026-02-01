@@ -1,0 +1,189 @@
+@{
+    ViewData["Title"] = "處理人員管理";
+}
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card p-4 mb-4">
+            <h2 class="h5 mb-3">新增處理人員</h2>
+            <div class="alert alert-danger d-none" id="createError"></div>
+            <form id="createForm">
+                <div class="mb-3">
+                    <label class="form-label" for="name">姓名</label>
+                    <input class="form-control" id="name" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="lineUserId">LINE User ID</label>
+                    <input class="form-control" id="lineUserId" maxlength="100" />
+                </div>
+                <button class="btn btn-primary w-100" type="submit">新增</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">處理人員清單</h2>
+                <button class="btn btn-outline-secondary btn-sm" id="refreshBtn">重新整理</button>
+            </div>
+            <div class="alert alert-danger d-none" id="listError"></div>
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>LINE ID</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="handlerTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getToken() { return localStorage.getItem('accessToken'); }
+
+        function renderRow(item) {
+            const statusBadge = item.isActive
+                ? '<span class="badge bg-success">啟用</span>'
+                : '<span class="badge bg-secondary">停用</span>';
+
+            const toggleLabel = item.isActive ? '停用' : '啟用';
+
+            return `<tr>
+                <td>${item.name}</td>
+                <td>${item.lineUserId || '-'}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${item.id}">編輯</button>
+                    <button class="btn btn-sm btn-outline-secondary" data-action="toggle" data-id="${item.id}" data-active="${item.isActive}">${toggleLabel}</button>
+                    <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${item.id}">刪除</button>
+                </td>
+            </tr>`;
+        }
+
+        function loadHandlers() {
+            const token = getToken();
+            if (!token) {
+                $('#listError').removeClass('d-none').text('請先登入管理者帳號');
+                return;
+            }
+
+            fetch('/api/admin/handlers', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(async response => {
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result?.error || '載入失敗');
+                }
+                return response.json();
+            }).then(items => {
+                $('#handlerTable').html(items.map(renderRow).join(''));
+            }).catch(err => {
+                $('#listError').removeClass('d-none').text(err.message);
+            });
+        }
+
+        $(function () {
+            loadHandlers();
+
+            $('#refreshBtn').on('click', loadHandlers);
+
+            $('#createForm').on('submit', function (e) {
+                e.preventDefault();
+                $('#createError').addClass('d-none').text('');
+
+                const token = getToken();
+                if (!token) {
+                    $('#createError').removeClass('d-none').text('請先登入管理者帳號');
+                    return;
+                }
+
+                fetch('/api/admin/handlers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: $('#name').val(),
+                        lineUserId: $('#lineUserId').val() || null
+                    })
+                }).then(async response => {
+                    if (!response.ok) {
+                        const result = await response.json();
+                        throw new Error(result?.error || '新增失敗');
+                    }
+                    return response.json();
+                }).then(() => {
+                    $('#name').val('');
+                    $('#lineUserId').val('');
+                    loadHandlers();
+                }).catch(err => {
+                    $('#createError').removeClass('d-none').text(err.message);
+                });
+            });
+
+            $('#handlerTable').on('click', 'button[data-action]', function () {
+                const action = $(this).data('action');
+                const id = $(this).data('id');
+                const token = getToken();
+
+                if (!token) {
+                    alert('請先登入管理者帳號');
+                    return;
+                }
+
+                if (action === 'edit') {
+                    const row = $(this).closest('tr');
+                    const name = prompt('姓名', row.find('td').eq(0).text());
+                    if (name === null) { return; }
+                    const lineUserId = prompt('LINE User ID', row.find('td').eq(1).text().trim() === '-' ? '' : row.find('td').eq(1).text());
+
+                    fetch(`/api/admin/handlers/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            lineUserId: lineUserId || null,
+                            isActive: row.find('td').eq(2).find('.badge').hasClass('bg-success')
+                        })
+                    }).then(loadHandlers);
+                }
+
+                if (action === 'toggle') {
+                    const row = $(this).closest('tr');
+                    const name = row.find('td').eq(0).text();
+                    const lineUserId = row.find('td').eq(1).text().trim();
+                    const isActive = $(this).data('active') === true || $(this).data('active') === 'True';
+
+                    fetch(`/api/admin/handlers/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            lineUserId: lineUserId === '-' ? null : lineUserId,
+                            isActive: !isActive
+                        })
+                    }).then(loadHandlers);
+                }
+
+                if (action === 'delete') {
+                    fetch(`/api/admin/handlers/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(loadHandlers);
+                }
+            });
+        });
+    </script>
+}
