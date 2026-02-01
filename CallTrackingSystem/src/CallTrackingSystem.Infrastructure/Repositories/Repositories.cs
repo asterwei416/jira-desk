@@ -334,6 +334,68 @@ public class ChangeHistoryRepository : IChangeHistoryRepository
     }
 }
 
+public class HandlerMappingRepository : IHandlerMappingRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public HandlerMappingRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<HandlerMapping>> GetMappingsAsync(
+        int? inquirySystemId,
+        int? handlerId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.HandlerMappings
+            .Include(x => x.Handler)
+            .Include(x => x.InquirySystem)
+            .AsQueryable();
+
+        if (inquirySystemId.HasValue)
+        {
+            query = query.Where(x => x.InquirySystemId == inquirySystemId.Value);
+        }
+
+        if (handlerId.HasValue)
+        {
+            query = query.Where(x => x.HandlerId == handlerId.Value);
+        }
+
+        return await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<HandlerMapping?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _context.HandlerMappings
+            .Include(x => x.Handler)
+            .Include(x => x.InquirySystem)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public async Task<HandlerMapping> AddAsync(HandlerMapping mapping, CancellationToken cancellationToken = default)
+    {
+        _context.HandlerMappings.Add(mapping);
+        await _context.SaveChangesAsync(cancellationToken);
+        return mapping;
+    }
+
+    public async Task DeleteAsync(HandlerMapping mapping, CancellationToken cancellationToken = default)
+    {
+        _context.HandlerMappings.Remove(mapping);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsAsync(int handlerId, int inquirySystemId, CancellationToken cancellationToken = default)
+    {
+        return await _context.HandlerMappings
+            .AnyAsync(x => x.HandlerId == handlerId && x.InquirySystemId == inquirySystemId, cancellationToken);
+    }
+}
+
 public class UserRepository : IUserRepository
 {
     private readonly ApplicationDbContext _context;

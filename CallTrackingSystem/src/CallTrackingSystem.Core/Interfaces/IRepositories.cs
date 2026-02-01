@@ -165,6 +165,37 @@ public interface IChangeHistoryRepository
 }
 
 /// <summary>
+/// 處理人員對應 Repository 介面
+/// </summary>
+public interface IHandlerMappingRepository
+{
+    /// <summary>
+    /// 取得對應清單
+    /// </summary>
+    Task<List<HandlerMapping>> GetMappingsAsync(int? inquirySystemId, int? handlerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 依 ID 取得對應
+    /// </summary>
+    Task<HandlerMapping?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 新增對應
+    /// </summary>
+    Task<HandlerMapping> AddAsync(HandlerMapping mapping, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 刪除對應
+    /// </summary>
+    Task DeleteAsync(HandlerMapping mapping, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 檢查對應是否已存在
+    /// </summary>
+    Task<bool> ExistsAsync(int handlerId, int inquirySystemId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// 使用者 Repository 介面
 /// </summary>
 public interface IUserRepository
