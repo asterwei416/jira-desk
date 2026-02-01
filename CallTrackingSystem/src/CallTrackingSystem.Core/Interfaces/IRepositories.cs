@@ -100,6 +100,37 @@ public interface IChangeHistoryRepository
 }
 
 /// <summary>
+/// 使用者 Repository 介面
+/// </summary>
+public interface IUserRepository
+{
+    /// <summary>
+    /// 根據 ID 取得使用者
+    /// </summary>
+    Task<User?> GetByIdAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根據使用者名稱取得使用者
+    /// </summary>
+    Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根據 LINE User ID 取得使用者
+    /// </summary>
+    Task<User?> GetByLineUserIdAsync(string lineUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 新增使用者
+    /// </summary>
+    Task<User> AddAsync(User user, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新使用者
+    /// </summary>
+    Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// 通知記錄 Repository 介面
 /// </summary>
 public interface INotificationLogRepository

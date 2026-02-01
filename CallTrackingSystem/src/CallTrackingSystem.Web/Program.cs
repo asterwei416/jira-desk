@@ -40,6 +40,7 @@ builder.Services.AddScoped<ICallRecordRepository, CallRecordRepository>();
 builder.Services.AddScoped<IInquirySystemRepository, InquirySystemRepository>();
 builder.Services.AddScoped<IHandlerRepository, HandlerRepository>();
 builder.Services.AddScoped<IChangeHistoryRepository, ChangeHistoryRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INotificationLogRepository, NotificationLogRepository>();
 builder.Services.AddScoped<CallTrackingSystem.Infrastructure.Services.ILineMessagingClient, CallTrackingSystem.Infrastructure.Services.LineMessagingClientWrapper>();
 
