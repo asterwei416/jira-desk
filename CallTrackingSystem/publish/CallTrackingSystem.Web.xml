@@ -1,0 +1,290 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CallTrackingSystem.Web</name>
+    </assembly>
+    <members>
+        <member name="T:CallTrackingSystem.Web.Controllers.AdminCallRecordsController">
+            <summary>
+            管理者專用來電紀錄 API
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AdminCallRecordsController.ForceUnlock(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            強制解鎖（僅 Admin）
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>鎖定狀態</returns>
+            <response code="200">成功強制解鎖</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AdminController">
+            <summary>
+            管理介面（MVC）
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AdminHandlerMappingsController">
+            <summary>
+            處理人員對應管理 API
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AdminHandlersController">
+            <summary>
+            處理人員管理 API
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AdminInquirySystemsController">
+            <summary>
+            詢問系統管理 API
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AdminUsersController">
+            <summary>
+            使用者管理 API
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AuthController">
+            <summary>
+            認證 API
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.Login(CallTrackingSystem.Core.DTOs.LoginRequest,System.Threading.CancellationToken)">
+            <summary>
+            系統內建帳號登入
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.Logout">
+            <summary>
+            登出
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.LineLogin">
+            <summary>
+            啟動 LINE Login 流程
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.LineCallback(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            LINE Login 回調
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.BindLineAccount(CallTrackingSystem.Core.DTOs.BindLineAccountRequest,System.Threading.CancellationToken)">
+            <summary>
+            綁定 LINE 帳號（管理者）
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.UnbindLineAccount(CallTrackingSystem.Core.DTOs.UnbindLineAccountRequest,System.Threading.CancellationToken)">
+            <summary>
+            解除 LINE 帳號綁定（管理者）
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.GetProfile(System.Threading.CancellationToken)">
+            <summary>
+            取得個人資料
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.UpdateProfile(CallTrackingSystem.Core.DTOs.UpdateProfileRequest,System.Threading.CancellationToken)">
+            <summary>
+            更新個人資料
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.AuthController.ChangePassword(CallTrackingSystem.Core.DTOs.ChangePasswordRequest,System.Threading.CancellationToken)">
+            <summary>
+            變更密碼
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.AuthViewController">
+            <summary>
+            認證頁面（MVC）
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.CallRecordController">
+            <summary>
+            來電紀錄 MVC 頁面
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.CallRecordsController">
+            <summary>
+            來電紀錄管理 API
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.CreateCallRecord(CallTrackingSystem.Core.DTOs.CreateCallRecordRequest,System.Threading.CancellationToken)">
+            <summary>
+            建立新的來電紀錄
+            </summary>
+            <param name="request">來電紀錄資料</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>建立的來電紀錄</returns>
+            <response code="201">成功建立來電紀錄</response>
+            <response code="400">請求資料無效</response>
+            <response code="500">伺服器內部錯誤</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.GetCallRecord(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            取得指定的來電紀錄詳細資訊
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>來電紀錄詳細資訊</returns>
+            <response code="200">成功取得來電紀錄</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.GetCallRecords(CallTrackingSystem.Web.Models.SearchFilterModel,System.Threading.CancellationToken)">
+            <summary>
+            取得來電紀錄清單（分頁）
+            </summary>
+            <param name="filter">搜尋條件</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>分頁的來電紀錄清單</returns>
+            <response code="200">成功取得來電紀錄清單</response>
+            <response code="400">請求參數無效</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.UpdateCallRecord(System.Int32,CallTrackingSystem.Core.DTOs.UpdateCallRecordRequest,System.Threading.CancellationToken)">
+            <summary>
+            更新來電紀錄
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="request">更新的資料</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>更新後的來電紀錄</returns>
+            <response code="200">成功更新來電紀錄</response>
+            <response code="400">請求資料無效</response>
+            <response code="404">找不到指定的來電紀錄</response>
+            <response code="409">紀錄正被其他使用者編輯中</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.GetLockStatus(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            取得編輯鎖定狀態
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>鎖定狀態</returns>
+            <response code="200">成功取得鎖定狀態</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.AcquireLock(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            取得編輯鎖定
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>鎖定結果</returns>
+            <response code="200">成功取得鎖定或已由自己鎖定</response>
+            <response code="404">找不到指定的來電紀錄</response>
+            <response code="409">紀錄正被其他使用者編輯中</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.ReleaseLock(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            釋放編輯鎖定
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>鎖定狀態</returns>
+            <response code="200">成功釋放鎖定</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.DeleteCallRecord(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            刪除來電紀錄
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>無內容</returns>
+            <response code="204">成功刪除來電紀錄</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.UpdateStatus(System.Int32,CallTrackingSystem.Web.Controllers.UpdateStatusRequest,System.Threading.CancellationToken)">
+            <summary>
+            更新處理狀態
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="request">狀態更新資料</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>更新後的來電紀錄</returns>
+            <response code="200">成功更新狀態</response>
+            <response code="400">狀態值無效</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.GetChangeHistory(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            查詢變更歷史
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>變更歷史清單</returns>
+            <response code="200">查詢成功</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.GetNotifications(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            查詢通知記錄
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>通知記錄清單</returns>
+            <response code="200">查詢成功</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.CallRecordsController.UpdateHandlers(System.Int32,CallTrackingSystem.Core.DTOs.UpdateHandlersRequest,System.Threading.CancellationToken)">
+            <summary>
+            更新處理人員
+            </summary>
+            <param name="id">來電紀錄 ID</param>
+            <param name="request">處理人員更新資料</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>更新後的來電紀錄</returns>
+            <response code="200">更新成功</response>
+            <response code="400">請求資料無效</response>
+            <response code="404">找不到指定的來電紀錄</response>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.UpdateStatusRequest">
+            <summary>
+            更新狀態請求 DTO
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.InquirySystemsController">
+            <summary>
+            詢問系統管理 API
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.InquirySystemsController.GetActiveInquirySystems(System.Threading.CancellationToken)">
+            <summary>
+            取得所有啟用的詢問系統清單（用於下拉選單）
+            </summary>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>詢問系統清單</returns>
+            <response code="200">成功取得詢問系統清單</response>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Controllers.ReportsController">
+            <summary>
+            報表匯出 API
+            </summary>
+        </member>
+        <member name="M:CallTrackingSystem.Web.Controllers.ReportsController.ExportExcel(CallTrackingSystem.Core.DTOs.ExcelReportRequest,System.Threading.CancellationToken)">
+            <summary>
+            匯出 Excel 報表
+            </summary>
+            <param name="request">匯出條件</param>
+            <param name="cancellationToken">取消權杖</param>
+            <returns>Excel 檔案</returns>
+            <response code="200">匯出成功</response>
+            <response code="400">參數錯誤或超出匯出限制</response>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Middleware.GlobalExceptionHandler">
+            <summary>
+            全域例外處理中介軟體
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Models.ErrorResponse">
+            <summary>
+            標準錯誤回應
+            </summary>
+        </member>
+        <member name="T:CallTrackingSystem.Web.Models.SearchFilterModel">
+            <summary>
+            來電紀錄搜尋條件
+            </summary>
+        </member>
+    </members>
+</doc>

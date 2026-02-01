@@ -8,7 +8,21 @@
     },
     "chat.tools.terminal.autoApprove": {
         ".specify/scripts/bash/": true,
-        ".specify/scripts/powershell/": true
+        ".specify/scripts/powershell/": true,
+        "/^dotnet test tests/CallTrackingSystem\\.IntegrationTests/CallTrackingSystem\\.IntegrationTests\\.csproj$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "git -C \"c:\\Users\\trist\\Desktop\\Google_Antigravity\\需求紀錄與問題分析系統\"": true,
+        "dotnet test": true,
+        "/^\\$cmd = \"pwsh -NoProfile -File `\"c:\\\\Users\\\\trist\\\\Desktop\\\\Google_Antigravity\\\\需求紀錄與問題分析系統\\\\CallTrackingSystem\\\\scripts\\\\run-smoke-tests\\.ps1`\" -AutoStartServer -SkipExcel\"; cmd\\.exe /c \"\\$cmd > c:\\\\Users\\\\trist\\\\Desktop\\\\Google_Antigravity\\\\需求紀錄與問題分析系統\\\\CallTrackingSystem\\\\artifacts\\\\smoke\\\\smoke\\.latest\\.log 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pwsh -NoProfile -File \"c:\\\\Users\\\\trist\\\\Desktop\\\\Google_Antigravity\\\\需求紀錄與問題分析系統\\\\CallTrackingSystem\\\\scripts\\\\run-smoke-tests\\.ps1\" -AutoStartServer -SkipExcel$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
 

@@ -114,6 +114,22 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// 初始化資料庫與種子資料（Development）
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        DbInitializer.Initialize(dbContext);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "資料庫初始化/種子資料建立失敗");
+        throw;
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -15,13 +15,8 @@ public static class DbInitializer
     {
         // 確保資料庫已建立
         context.Database.EnsureCreated();
-        
-        // 檢查是否已有資料
-        if (context.InquirySystems.Any())
-        {
-            return; // 已初始化
-        }
-        
+
+        // 逐項補齊種子資料（避免部分資料存在時整體被跳過）
         SeedInquirySystems(context);
         SeedUsers(context);
         SeedHandlers(context);
@@ -30,6 +25,11 @@ public static class DbInitializer
     
     private static void SeedInquirySystems(ApplicationDbContext context)
     {
+        if (context.InquirySystems.Any())
+        {
+            return;
+        }
+
         var systems = new[]
         {
             InquirySystem.Create("Google 表單系統"),
@@ -48,21 +48,44 @@ public static class DbInitializer
         // 預設管理者帳號
         // 使用者名稱: admin
         // 密碼: Admin@123
-        var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123");
-        var admin = User.Create("admin", adminPasswordHash, "系統管理員", UserRole.Admin);
-        
+        var admin = context.Users.FirstOrDefault(u => u.Username.ToLower() == "admin");
+        if (admin == null)
+        {
+            var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123");
+            admin = User.Create("admin", adminPasswordHash, "系統管理員", UserRole.Admin);
+            context.Users.Add(admin);
+        }
+        else
+        {
+            // Development 初始化：確保可直接登入測試
+            admin.ChangePassword(BCrypt.Net.BCrypt.HashPassword("Admin@123"));
+        }
+
         // 預設員工帳號
         // 使用者名稱: staff
         // 密碼: Staff@123
-        var staffPasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123");
-        var staff = User.Create("staff", staffPasswordHash, "客服人員", UserRole.Staff);
-        
-        context.Users.AddRange(admin, staff);
+        var staff = context.Users.FirstOrDefault(u => u.Username.ToLower() == "staff");
+        if (staff == null)
+        {
+            var staffPasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123");
+            staff = User.Create("staff", staffPasswordHash, "客服人員", UserRole.Staff);
+            context.Users.Add(staff);
+        }
+        else
+        {
+            staff.ChangePassword(BCrypt.Net.BCrypt.HashPassword("Staff@123"));
+        }
+
         context.SaveChanges();
     }
     
     private static void SeedHandlers(ApplicationDbContext context)
     {
+        if (context.Handlers.Any())
+        {
+            return;
+        }
+
         var handlers = new[]
         {
             Handler.Create("張小明"),
@@ -78,6 +101,11 @@ public static class DbInitializer
     
     private static void SeedHandlerMappings(ApplicationDbContext context)
     {
+        if (context.HandlerMappings.Any())
+        {
+            return;
+        }
+
         // 取得已建立的系統和處理人員
         var systems = context.InquirySystems.ToList();
         var handlers = context.Handlers.ToList();
