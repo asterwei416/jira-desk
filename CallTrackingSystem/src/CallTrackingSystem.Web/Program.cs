@@ -3,6 +3,7 @@ using CallTrackingSystem.Core.Interfaces;
 using CallTrackingSystem.Core.Services;
 using CallTrackingSystem.Infrastructure.Data;
 using CallTrackingSystem.Infrastructure.Repositories;
+using CallTrackingSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -49,6 +50,9 @@ builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
 builder.Services.AddScoped<INotificationLogService, NotificationLogService>();
 builder.Services.AddScoped<ILineNotificationService, CallTrackingSystem.Infrastructure.Services.LineNotificationService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+
+// 註冊背景服務
+builder.Services.AddHostedService<EditLockCleanupService>();
 
 // 註冊健康檢查
 builder.Services.AddHealthChecks()
