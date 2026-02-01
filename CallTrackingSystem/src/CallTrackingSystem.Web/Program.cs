@@ -1,11 +1,15 @@
+using System.Text;
 using System.Text.Json;
+using CallTrackingSystem.Core.Enums;
 using CallTrackingSystem.Core.Interfaces;
 using CallTrackingSystem.Core.Services;
 using CallTrackingSystem.Infrastructure.Data;
 using CallTrackingSystem.Infrastructure.Repositories;
 using CallTrackingSystem.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +33,39 @@ builder.Services.AddSwaggerGen(options =>
     {
         options.IncludeXmlComments(xmlPath);
     }
+});
+
+// JWT 認證
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"];
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            throw new InvalidOperationException("JWT SecretKey 未設定");
+        }
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+// 授權原則
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy =>
+        policy.RequireRole(UserRole.Admin.ToString()));
+    options.AddPolicy("Staff", policy =>
+        policy.RequireRole(UserRole.Staff.ToString()));
 });
 
 // 註冊資料庫上下文 (SQLite)
@@ -76,6 +113,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // 啟用 Controllers
 app.MapControllers();
