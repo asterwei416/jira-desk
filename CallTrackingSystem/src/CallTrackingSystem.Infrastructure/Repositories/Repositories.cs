@@ -251,6 +251,18 @@ public class HandlerRepository : IHandlerRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Handler?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Handlers.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public async Task<List<Handler>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Handlers
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<Handler>> GetByIdsAsync(
         IReadOnlyCollection<int> handlerIds,
         CancellationToken cancellationToken = default)
@@ -263,6 +275,32 @@ public class HandlerRepository : IHandlerRepository
         return await _context.Handlers
             .Where(x => handlerIds.Contains(x.Id))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Handler?> GetByLineUserIdAsync(string lineUserId, CancellationToken cancellationToken = default)
+    {
+        var normalized = lineUserId.Trim();
+        return await _context.Handlers
+            .FirstOrDefaultAsync(x => x.LineUserId == normalized, cancellationToken);
+    }
+
+    public async Task<Handler> AddAsync(Handler handler, CancellationToken cancellationToken = default)
+    {
+        _context.Handlers.Add(handler);
+        await _context.SaveChangesAsync(cancellationToken);
+        return handler;
+    }
+
+    public async Task UpdateAsync(Handler handler, CancellationToken cancellationToken = default)
+    {
+        _context.Handlers.Update(handler);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Handler handler, CancellationToken cancellationToken = default)
+    {
+        _context.Handlers.Remove(handler);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }
 

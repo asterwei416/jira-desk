@@ -89,6 +89,7 @@ builder.Services.AddScoped<IEditLockManager, EditLockManager>();
 builder.Services.AddScoped<IChangeHistoryService, ChangeHistoryService>();
 builder.Services.AddScoped<INotificationLogService, NotificationLogService>();
 builder.Services.AddScoped<IInquirySystemService, InquirySystemService>();
+builder.Services.AddScoped<IHandlerService, HandlerService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILineLoginService, LineLoginService>();

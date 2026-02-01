@@ -108,6 +108,16 @@ public interface IInquirySystemRepository
 public interface IHandlerRepository
 {
     /// <summary>
+    /// 根據 ID 取得處理人員
+    /// </summary>
+    Task<Handler?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 取得所有處理人員
+    /// </summary>
+    Task<List<Handler>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 根據詢問系統 ID 取得對應的處理人員
     /// </summary>
     Task<List<Handler>> GetHandlersByInquirySystemIdAsync(int inquirySystemId, CancellationToken cancellationToken = default);
@@ -116,6 +126,26 @@ public interface IHandlerRepository
     /// 根據處理人員 ID 清單取得處理人員
     /// </summary>
     Task<List<Handler>> GetByIdsAsync(IReadOnlyCollection<int> handlerIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根據 LINE User ID 取得處理人員
+    /// </summary>
+    Task<Handler?> GetByLineUserIdAsync(string lineUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 新增處理人員
+    /// </summary>
+    Task<Handler> AddAsync(Handler handler, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新處理人員
+    /// </summary>
+    Task UpdateAsync(Handler handler, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 刪除處理人員
+    /// </summary>
+    Task DeleteAsync(Handler handler, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
