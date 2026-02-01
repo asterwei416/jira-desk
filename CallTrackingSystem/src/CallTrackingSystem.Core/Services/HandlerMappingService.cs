@@ -30,6 +30,13 @@ public class HandlerMappingService : IHandlerMappingService
         return await _handlerMappingRepository.GetMappingsAsync(inquirySystemId, handlerId, cancellationToken);
     }
 
+    public async Task<List<Handler>> GetHandlersByInquirySystemIdAsync(
+        int inquirySystemId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _handlerRepository.GetHandlersByInquirySystemIdAsync(inquirySystemId, cancellationToken);
+    }
+
     public async Task<HandlerMapping> CreateMappingAsync(
         int handlerId,
         int inquirySystemId,

@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "新增來電紀錄";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h2 class="h5 mb-3">新增來電紀錄</h2>
+            <div class="alert alert-danger d-none" id="formError"></div>
+            <form id="createForm">
+                <div class="mb-3">
+                    <label class="form-label" for="inquirySystem">詢問系統</label>
+                    <select class="form-select" id="inquirySystem" required></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="subject">主旨</label>
+                    <input class="form-control" id="subject" maxlength="50" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="content">內容</label>
+                    <textarea class="form-control" id="content" maxlength="150" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="urgency">緊急度</label>
+                    <select class="form-select" id="urgency" required>
+                        <option value="Low">低</option>
+                        <option value="Medium" selected>中</option>
+                        <option value="High">高</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="contactName">聯絡人</label>
+                        <input class="form-control" id="contactName" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="contactPhone">聯絡電話</label>
+                        <input class="form-control" id="contactPhone" required />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="faqReference">參考 FAQ</label>
+                    <input class="form-control" id="faqReference" maxlength="500" />
+                </div>
+                <button class="btn btn-primary w-100" type="submit">儲存</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function loadInquirySystems() {
+            return fetch('/api/InquirySystems')
+                .then(response => response.json())
+                .then(items => {
+                    const options = items.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
+                    $('#inquirySystem').html(options);
+                });
+        }
+
+        function validatePhone(phone) {
+            const regex = /^(0\d{1,2}-?\d{6,8}|09\d{2}-?\d{3}-?\d{3})$/;
+            return regex.test(phone);
+        }
+
+        $(function () {
+            loadInquirySystems();
+
+            $('#createForm').on('submit', function (e) {
+                e.preventDefault();
+                $('#formError').addClass('d-none').text('');
+
+                const phone = $('#contactPhone').val();
+                if (!validatePhone(phone)) {
+                    $('#formError').removeClass('d-none').text('連絡電話格式錯誤');
+                    return;
+                }
+
+                const payload = {
+                    inquirySystemId: Number($('#inquirySystem').val()),
+                    subject: $('#subject').val(),
+                    content: $('#content').val(),
+                    urgencyLevel: $('#urgency').val(),
+                    contactName: $('#contactName').val(),
+                    contactPhone: phone,
+                    faqReference: $('#faqReference').val() || null
+                };
+
+                fetch('/api/CallRecords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(async response => {
+                    if (!response.ok) {
+                        const result = await response.json();
+                        throw new Error(result?.error || '建立失敗');
+                    }
+                    return response.json();
+                }).then(result => {
+                    window.location.href = `/CallRecord/Details/${result.id}`;
+                }).catch(err => {
+                    $('#formError').removeClass('d-none').text(err.message);
+                });
+            });
+        });
+    </script>
+}

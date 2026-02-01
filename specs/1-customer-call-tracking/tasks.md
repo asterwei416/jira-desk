@@ -138,18 +138,18 @@
 
 #### 全域錯誤處理
 
-- [ ] T019 建立全域例外處理中介軟體
+- [x] T019 建立全域例外處理中介軟體
   - 在 `Web/Middleware/GlobalExceptionHandler.cs` 建立中介軟體
   - 捕捉所有例外並回傳標準化 JSON 錯誤格式
   - 記錄錯誤日誌到 ILogger
 
-- [ ] T020 建立標準錯誤回應 DTO
+- [x] T020 建立標準錯誤回應 DTO
   - 在 `Web/Models/ErrorResponse.cs` 定義標準錯誤格式
   - 屬性: `error`, `code`, `timestamp`
 
 #### Repository Pattern
 
-- [ ] T021 [P] 建立 Generic Repository 基礎類別
+- [x] T021 [P] 建立 Generic Repository 基礎類別
   - 在 `Infrastructure/Repositories/GenericRepository.cs` 建立泛型 Repository
   - 實作基本 CRUD: `GetByIdAsync()`, `GetAllAsync()`, `AddAsync()`, `UpdateAsync()`, `DeleteAsync()`
   - 介面定義在 `Core/Interfaces/IGenericRepository.cs`
@@ -177,7 +177,7 @@
   - 介面定義在 `Core/Interfaces/ICallRecordService.cs`
   - 實作方法: `CreateAsync()`, `GetByIdAsync()`, `UpdateAsync()`, `DeleteAsync()`
 
-- [ ] T023 [P] [US1] 建立 HandlerMappingService
+- [x] T023 [P] [US1] 建立 HandlerMappingService
   - 在 `Core/Services/HandlerMappingService.cs` 建立 Service
   - 實作方法: `GetHandlersByInquirySystemIdAsync()`
   - 用於自動指派處理人員
@@ -238,12 +238,12 @@
   - 在 `Web/Controllers/CallRecordController.cs` 建立 MVC Controller
   - 路由: `/CallRecord/`
 
-- [ ] T034 [P] [US1] 建立新增紀錄表單 View
+- [x] T034 [P] [US1] 建立新增紀錄表單 View
   - 在 `Web/Views/CallRecord/Create.cshtml` 建立表單
   - 包含所有必填和選填欄位
   - Client-side 驗證（jQuery Validation）
 
-- [ ] T035 [P] [US1] 建立編輯紀錄表單 View
+- [x] T035 [P] [US1] 建立編輯紀錄表單 View
   - 在 `Web/Views/CallRecord/Edit.cshtml` 建立表單
   - 檢查編輯鎖定狀態，顯示鎖定提示
   - RowVersion 隱藏欄位傳遞
@@ -255,12 +255,12 @@
 
 #### 測試
 
-- [ ] T037 [P] [US1] CallRecordService 單元測試
+- [x] T037 [P] [US1] CallRecordService 單元測試
   - 測試 `CreateAsync()`: 成功建立、驗證失敗、自動指派處理人員
   - 測試 `UpdateAsync()`: 成功更新、樂觀鎖定衝突
   - 使用 Moq 模擬 Repository 和 LINE Service
 
-- [ ] T038 [P] [US1] CallRecordController API 整合測試
+- [x] T038 [P] [US1] CallRecordController API 整合測試
   - 測試完整 CRUD 流程
   - 測試驗證錯誤回應
   - 測試權限控制（Admin vs Staff）
@@ -592,7 +592,7 @@
   - 測試自動清理過期鎖定
   - 測試不清理未過期鎖定
 
-- [ ] T084 [P] [US6] 編輯鎖定整合測試
+- [x] T084 [P] [US6] 編輯鎖定整合測試
   - 模擬兩個使用者同時編輯
   - 驗證鎖定機制正常運作
 

@@ -6,6 +6,7 @@ using CallTrackingSystem.Core.Services;
 using CallTrackingSystem.Infrastructure.Data;
 using CallTrackingSystem.Infrastructure.Repositories;
 using CallTrackingSystem.Infrastructure.Services;
+using CallTrackingSystem.Web.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -126,6 +127,8 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseMiddleware<GlobalExceptionHandler>();
 
 app.Use(async (context, next) =>
 {

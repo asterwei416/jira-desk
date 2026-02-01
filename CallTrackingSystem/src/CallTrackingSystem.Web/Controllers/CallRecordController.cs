@@ -20,4 +20,17 @@ public class CallRecordController : Controller
         ViewData["CallRecordId"] = id;
         return View();
     }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        ViewData["CallRecordId"] = id;
+        return View();
+    }
 }
