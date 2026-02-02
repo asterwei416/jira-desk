@@ -7,7 +7,7 @@
         <div class="card p-4">
             <h2 class="h5 mb-3">系統登入</h2>
             <div class="alert alert-danger d-none" id="loginError"></div>
-            <form id="loginForm">
+            <form id="loginForm" method="post">
                 <div class="mb-3">
                     <label class="form-label" for="username">帳號</label>
                     <input class="form-control" id="username" name="username" required />
@@ -26,14 +26,20 @@
 
 @section Scripts {
     <script>
-        $(function () {
-            $('#loginForm').on('submit', function (e) {
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const errorAlert = document.getElementById('loginError');
+
+            form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                $('#loginError').addClass('d-none').text('');
+                errorAlert.classList.add('d-none');
+                errorAlert.textContent = '';
 
                 const payload = {
-                    username: $('#username').val(),
-                    password: $('#password').val()
+                    username: usernameInput.value,
+                    password: passwordInput.value
                 };
 
                 fetch('/api/auth/login', {
@@ -50,7 +56,8 @@
                     localStorage.setItem('accessToken', result.accessToken);
                     window.location.href = '/CallRecord/Index';
                 }).catch(err => {
-                    $('#loginError').removeClass('d-none').text(err.message);
+                    errorAlert.classList.remove('d-none');
+                    errorAlert.textContent = err.message;
                 });
             });
         });

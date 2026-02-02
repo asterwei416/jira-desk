@@ -27,4 +27,4 @@ Write-Host "📝 Swagger UI: https://localhost:5001/swagger" -ForegroundColor Cy
 Write-Host "🏥 健康檢查: https://localhost:5001/health" -ForegroundColor Cyan
 Write-Host ""
 
-dotnet run
+dotnet run --launch-profile https

@@ -1,0 +1,17 @@
+  正在判斷要還原的專案...
+  所有專案都在最新狀態，可進行還原。
+  CallTrackingSystem.Core -> C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Core\bin\Debug\net8.0\CallTrackingSystem.Core.dll
+  CallTrackingSystem.Infrastructure -> C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Infrastructure\bin\Debug\net8.0\CallTrackingSystem.Infrastructure.dll
+C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\Program.cs(83,36): warning CS8600: 正在將 Null 常值或可能的 Null 值轉換為不可為 Null 的型別。 [C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj]
+C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\Controllers\AuthController.cs(60,27): error CS1503: 引數 1: 無法從 'string' 轉換成 'System.IO.BinaryReader' [C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj]
+C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\Controllers\AuthController.cs(60,44): error CS1503: 引數 2: 無法從 'CallTrackingSystem.Core.Enums.UserRole' 轉換成 'System.Security.Claims.ClaimsIdentity?' [C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj]
+
+建置失敗。
+
+C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\Program.cs(83,36): warning CS8600: 正在將 Null 常值或可能的 Null 值轉換為不可為 Null 的型別。 [C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj]
+C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\Controllers\AuthController.cs(60,27): error CS1503: 引數 1: 無法從 'string' 轉換成 'System.IO.BinaryReader' [C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj]
+C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\Controllers\AuthController.cs(60,44): error CS1503: 引數 2: 無法從 'CallTrackingSystem.Core.Enums.UserRole' 轉換成 'System.Security.Claims.ClaimsIdentity?' [C:\Users\trist\Desktop\Google_Antigravity\需求紀錄與問題分析系統\CallTrackingSystem\src\CallTrackingSystem.Web\CallTrackingSystem.Web.csproj]
+    1 個警告
+    2 個錯誤
+
+經過時間 00:00:06.87

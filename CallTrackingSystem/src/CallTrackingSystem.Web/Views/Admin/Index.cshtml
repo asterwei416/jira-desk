@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "管理後台首頁";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card p-4">
+            <h2 class="h4 mb-4 text-center">後台管理系統</h2>
+            
+            <div class="row g-4">
+                <!-- 詢問系統管理 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm hover-shadow">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title mb-3">詢問系統</h5>
+                            <p class="card-text text-muted small">設定系統選項與啟用狀態</p>
+                            <a href="/Admin/InquirySystems" class="btn btn-outline-primary stretched-link mt-2">管理設定</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 處理人員管理 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm hover-shadow">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title mb-3">處理人員</h5>
+                            <p class="card-text text-muted small">新增與管理客服人員資訊</p>
+                            <a href="/Admin/Handlers" class="btn btn-outline-primary stretched-link mt-2">人員維護</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 對應關係設定 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm hover-shadow">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title mb-3">分配規則</h5>
+                            <p class="card-text text-muted small">設定系統與人員的分配規則</p>
+                            <a href="/Admin/HandlerMappings" class="btn btn-outline-primary stretched-link mt-2">規則設定</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 使用者帳號管理 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm hover-shadow">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title mb-3">帳號管理</h5>
+                            <p class="card-text text-muted small">管理後台登入帳號與權限</p>
+                            <a href="/Admin/Users" class="btn btn-outline-primary stretched-link mt-2">帳號設定</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-5 text-center">
+                <p class="text-muted">如需協助，請聯繫系統開發人員</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transition: all .2s ease-in-out;
+    }
+</style>

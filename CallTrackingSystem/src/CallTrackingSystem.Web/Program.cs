@@ -7,6 +7,7 @@ using CallTrackingSystem.Infrastructure.Data;
 using CallTrackingSystem.Infrastructure.Repositories;
 using CallTrackingSystem.Infrastructure.Services;
 using CallTrackingSystem.Web.Middleware;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -39,9 +40,21 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
-// JWT 認證
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// JWT & Cookie 認證
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = "JWT_OR_COOKIE";
+        options.DefaultChallengeScheme = "JWT_OR_COOKIE";
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.Cookie.Name = "CallTrackingSystem.Auth";
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
         var jwtSettings = builder.Configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
@@ -60,6 +73,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
             ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    })
+    .AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            // 如果 Authorization Header 存在且以此開頭，使用 JWT
+            string authorization = context.Request.Headers["Authorization"];
+            if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                return JwtBearerDefaults.AuthenticationScheme;
+            }
+
+            // 否則預設使用 Cookie (Web 瀏覽器)
+            return CookieAuthenticationDefaults.AuthenticationScheme;
         };
     });
 
@@ -152,7 +180,7 @@ app.Use(async (context, next) =>
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=()";
-    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:;";
+    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:;";
     await next();
 });
 

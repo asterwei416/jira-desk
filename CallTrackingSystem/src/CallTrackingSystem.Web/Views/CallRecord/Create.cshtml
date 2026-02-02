@@ -54,8 +54,20 @@
             return fetch('/api/InquirySystems')
                 .then(response => response.json())
                 .then(items => {
-                    const options = items.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
+                    console.log('Inquiry Systems:', items); // Debug
+                    let options = '<option value="" disabled selected>請選擇...</option>';
+                    if (Array.isArray(items)) {
+                        options += items.map(item => {
+                            const id = item.id || item.Id;
+                            const name = item.name || item.Name;
+                            return `<option value="${id}">${name}</option>`;
+                        }).join('');
+                    }
                     $('#inquirySystem').html(options);
+                })
+                .catch(err => {
+                    console.error('Failed to load inquiry systems', err);
+                    $('#inquirySystem').html('<option value="">載入失敗</option>');
                 });
         }
 

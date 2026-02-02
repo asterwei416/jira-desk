@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using CallTrackingSystem.Core.DTOs;
 using CallTrackingSystem.Core.Interfaces;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,6 +51,27 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.LoginAsync(request.Username, request.Password, cancellationToken);
+
+            // 建立 ClaimsPrincipal 用於 Cookie 登入
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, result.User.Id),
+                new Claim(ClaimTypes.Name, result.User.Name),
+                new Claim(ClaimTypes.Role, result.User.Role.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTime.UtcNow.AddMinutes(60)
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -72,8 +95,9 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
     }
 

@@ -9,7 +9,17 @@ namespace CallTrackingSystem.Web.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {
-    [HttpGet]
+    // 支援 Cookie 認證 (Web) 或 JWT (API)
+    // 實際上因為 Program.cs 的 PolicyScheme 設定，這裡只需 Authorize 即可，
+    // 但為了明確與相容性，我們先保持預設，讓 PolicyScheme 自動判斷。
+    [HttpGet("")]
+    [HttpGet("Index")]
+    public IActionResult Index()
+    {
+        return View();
+    }
+
+    [HttpGet("InquirySystems")]
     public IActionResult InquirySystems()
     {
         return View();
