@@ -233,7 +233,8 @@ public class LineBotMessageHandler : ILineBotMessageHandler
         await _conversationService.UpdateConversationAsync(conversation);
 
         // 取得所有詢問系統
-        var inquirySystems = await _inquirySystemService.GetAllActiveAsync();
+        var allSystems = await _inquirySystemService.GetAllAsync();
+        var inquirySystems = allSystems.Where(s => s.IsActive).ToList();
         if (inquirySystems.Count > 13)
         {
             await _conversationService.ClearConversationAsync(lineUserId);
@@ -360,7 +361,14 @@ public class LineBotMessageHandler : ILineBotMessageHandler
         string replyToken,
         ConversationStateDto conversation)
     {
-        conversation.FormData.UrgencyLevel = urgencyValue;
+        // 將字串轉成 enum
+        if (!Enum.TryParse<UrgencyLevel>(urgencyValue, out var urgencyEnum))
+        {
+            await _lineClient.ReplyMessageAsync(replyToken, "⚠️ 無效的緊急程度，請重新選擇。");
+            return;
+        }
+        
+        conversation.FormData.UrgencyLevel = urgencyEnum;
         conversation = conversation with { CurrentStep = ConversationStep.AwaitingContactName };
         await _conversationService.UpdateConversationAsync(conversation);
 
@@ -409,7 +417,7 @@ public class LineBotMessageHandler : ILineBotMessageHandler
                       $"標題：{conversation.FormData.Subject}\n" +
                       $"內容：{conversation.FormData.Content}\n" +
                       $"所屬單位：{inquirySystem?.Name}\n" +
-                      $"緊急程度：{GetUrgencyLevelText(conversation.FormData.UrgencyLevel!)}\n" +
+                      $"緊急程度：{GetUrgencyLevelText(conversation.FormData.UrgencyLevel!.Value)}\n" +
                       $"聯絡人：{conversation.FormData.ContactName}\n" +
                       $"電話：{conversation.FormData.ContactPhone}\n\n" +
                       $"請確認資訊是否正確。";
@@ -481,7 +489,7 @@ public class LineBotMessageHandler : ILineBotMessageHandler
                 Subject = conversation.FormData.Subject!,
                 Content = conversation.FormData.Content!,
                 InquirySystemId = conversation.FormData.InquirySystemId!.Value,
-                UrgencyLevel = conversation.FormData.UrgencyLevel!,
+                UrgencyLevel = conversation.FormData.UrgencyLevel!.Value,
                 ContactName = conversation.FormData.ContactName!,
                 ContactPhone = conversation.FormData.ContactPhone!,
                 FaqReference = null
@@ -508,14 +516,14 @@ public class LineBotMessageHandler : ILineBotMessageHandler
         }
     }
 
-    private static string GetUrgencyLevelText(string urgencyLevel)
+    private static string GetUrgencyLevelText(UrgencyLevel urgencyLevel)
     {
         return urgencyLevel switch
         {
-            "Low" => "🟢 低",
-            "Medium" => "🟡 中",
-            "High" => "🔴 高",
-            _ => urgencyLevel
+            UrgencyLevel.Low => "🟢 低",
+            UrgencyLevel.Medium => "🟡 中",
+            UrgencyLevel.High => "🔴 高",
+            _ => urgencyLevel.ToString()
         };
     }
 

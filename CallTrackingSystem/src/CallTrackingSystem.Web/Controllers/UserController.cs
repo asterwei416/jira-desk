@@ -27,7 +27,7 @@ public class UserController : Controller
     [HttpGet("/user/settings")]
     public async Task<IActionResult> Settings(CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst("sub")?.Value ?? "0");
+        var userId = User.FindFirst("sub")?.Value ?? "0";
         var user = await _userService.GetByIdAsync(userId, cancellationToken);
 
         if (user == null)
@@ -47,7 +47,7 @@ public class UserController : Controller
         [FromForm] string displayName,
         CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst("sub")?.Value ?? "0");
+        var userId = User.FindFirst("sub")?.Value ?? "0";
 
         try
         {
@@ -69,7 +69,7 @@ public class UserController : Controller
     [HttpPost("/user/line-binding/remove")]
     public async Task<IActionResult> UnbindLineAccount(CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst("sub")?.Value ?? "0");
+        var userId = User.FindFirst("sub")?.Value ?? "0";
 
         try
         {

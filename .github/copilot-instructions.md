@@ -45,6 +45,15 @@ If none apply, write "None" explicitly.
 1. **新增來電記錄**: `CallRecordService` 建立實體 → 自動指派處理人員 → 寫入變更歷史 → 發送 LINE 通知（失敗不阻斷）
 2. **Excel 報表**: `ReportService` 使用 ClosedXML 生成三工作表（篩選摘要/明細/統計），見 [ReportService.cs](CallTrackingSystem/src/CallTrackingSystem.Core/Services/ReportService.cs)
 3. **編輯鎖定**: API 端點 `/api/call-records/{id}/lock`，背景清理服務每 5 分鐘執行
+4. **LINE Bot 對話**: 8 步驟引導式回報 → `LineBotMessageHandler` 處理狀態機 → In-Memory 對話狀態（5 分鐘逾時）→ 建立 CallRecord
+
+### LINE Integration Architecture (Feature: 2-line-bot-integration)
+- **LINE Messaging API**: 使用 HttpClient（`LineMessagingApiClient`），不依賴第三方 SDK
+- **Webhook 安全**: `LineSignatureValidatorMiddleware` 驗證 HMAC-SHA256 簽章
+- **對話狀態**: `ConversationStateService` 使用 `ConcurrentDictionary` In-Memory 儲存（**單實例限制**）
+- **背景清理**: `ConversationCleanupService` 每 5 分鐘清理過期對話
+- **LINE 綁定**: OAuth 2.0 透過 `LineLoginService`，State 參數存於 Cookie（5 分鐘有效）
+- **通知篩選**: 僅發送給 `Handler.LineUserId` 非空的處理人員
 
 ---
 
@@ -82,6 +91,14 @@ dotnet ef database update --project src/CallTrackingSystem.Infrastructure --star
 ### Data Constraints
 - Excel 匯出上限: 5000 筆
 - 編輯鎖定逾時: 30 分鐘
+- LINE Bot InquirySystem 選項: 最多 13 個（Quick Reply 限制）
+- 對話逾時: 5 分鐘無回應自動清除
+
+### LINE Bot Limitations
+- **單實例部署**: 對話狀態為 In-Memory，應用程式重啟時所有對話將遺失
+- **不支援多實例**: 不使用 Redis 或分散式快取（憲法限制）
+- **電話驗證**: 僅支援台灣手機（09xx-xxx-xxx）與市話（0x-xxxx-xxxx）格式
+- **通知重試**: 失敗僅記錄至 `NotificationLog`，不自動重試
 
 ---
 

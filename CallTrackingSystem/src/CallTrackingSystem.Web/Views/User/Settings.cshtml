@@ -35,7 +35,7 @@
                     </div>
                     <div class="col-md-6 mb-2">
                         <label class="text-muted small">顯示名稱</label>
-                        <div>@Model.DisplayName</div>
+                        <div>@Model.Name</div>
                     </div>
                     <div class="col-md-6 mb-2">
                         <label class="text-muted small">角色</label>
@@ -47,9 +47,6 @@
                                     break;
                                 case CallTrackingSystem.Core.Enums.UserRole.Staff:
                                     <span class="badge bg-primary">職員</span>
-                                    break;
-                                case CallTrackingSystem.Core.Enums.UserRole.Guest:
-                                    <span class="badge bg-secondary">訪客</span>
                                     break;
                             }
                         </div>
@@ -63,12 +60,6 @@
             <div class="mb-4">
                 <h3 class="h6 mb-3">LINE 官方帳號綁定</h3>
                 
-                @if (Model.Role == CallTrackingSystem.Core.Enums.UserRole.Guest)
-                {
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> 訪客角色無法綁定 LINE 帳號，請聯絡管理員變更角色權限。
-                    </div>
-                }
                 else if (!string.IsNullOrWhiteSpace(Model.LineUserId))
                 {
                     @* 已綁定狀態 *@

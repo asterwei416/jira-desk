@@ -7,6 +7,7 @@ using CallTrackingSystem.Infrastructure.Data;
 using CallTrackingSystem.Infrastructure.Repositories;
 using CallTrackingSystem.Infrastructure.Services;
 using CallTrackingSystem.Web.Middleware;
+using CallTrackingSystem.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

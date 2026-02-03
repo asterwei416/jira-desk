@@ -5,7 +5,7 @@ namespace CallTrackingSystem.Core.DTOs;
 /// <summary>
 /// 對話狀態 DTO（僅記憶體使用，不持久化至資料庫）
 /// </summary>
-public class ConversationStateDto
+public record ConversationStateDto
 {
     /// <summary>
     /// LINE User ID（Dictionary Key）
