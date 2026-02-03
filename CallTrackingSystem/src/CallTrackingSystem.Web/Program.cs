@@ -130,9 +130,12 @@ builder.Services.AddScoped<ILineLoginService, LineLoginService>();
 builder.Services.AddScoped<ILineNotificationService, CallTrackingSystem.Infrastructure.Services.LineNotificationService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
+builder.Services.AddScoped<ILineBotMessageHandler, LineBotMessageHandler>();
 
 // 註冊背景服務
 builder.Services.AddHostedService<EditLockCleanupService>();
+builder.Services.AddHostedService<ConversationCleanupService>();
 
 // 註冊健康檢查
 builder.Services.AddHealthChecks()
@@ -174,6 +177,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseMiddleware<GlobalExceptionHandler>();
+app.UseMiddleware<LineSignatureValidatorMiddleware>();
 
 app.Use(async (context, next) =>
 {

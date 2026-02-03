@@ -106,13 +106,13 @@ description: "Task list for LINE Bot Integration feature implementation"
 - [X] T046 [US2] Implement LineBotMessageHandler: HandlePostbackAsync for "確認送出" button in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
 - [X] T047 [US2] Implement LineBotMessageHandler: Call CallRecordService.CreateAsync in confirmation handler in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
 - [X] T048 [US2] Implement LineBotMessageHandler: "取消" command handler to clear conversation state in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T049 [US2] Create LineSignatureValidatorMiddleware for X-Line-Signature verification in CallTrackingSystem/src/CallTrackingSystem.Web/Middleware/LineSignatureValidatorMiddleware.cs
-- [ ] T050 [US2] Create LineWebhookController: POST /api/line/webhook endpoint in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/Api/LineWebhookController.cs
-- [ ] T051 [US2] Implement LineWebhookController: Route events to LineBotMessageHandler in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/Api/LineWebhookController.cs
-- [ ] T052 [US2] Add unbound user handling: Display "請先綁定 LINE 帳號" message in LineBotMessageHandler
-- [ ] T053 [US2] Add InquirySystem count > 13 handling: Display "選項過多，請至網頁端回報" in LineBotMessageHandler
-- [ ] T054 [US2] Register ConversationStateService, LineBotMessageHandler, ConversationCleanupService in Program.cs in CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs
-- [ ] T055 [US2] Register LineSignatureValidatorMiddleware in Program.cs middleware pipeline in CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs
+- [X] T049 [US2] Create LineSignatureValidatorMiddleware for X-Line-Signature verification in CallTrackingSystem/src/CallTrackingSystem.Web/Middleware/LineSignatureValidatorMiddleware.cs
+- [X] T050 [US2] Create LineWebhookController: POST /api/line/webhook endpoint in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/Api/LineWebhookController.cs
+- [X] T051 [US2] Implement LineWebhookController: Route events to LineBotMessageHandler in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/Api/LineWebhookController.cs
+- [X] T052 [US2] Add unbound user handling: Display "請先繫定 LINE 帳號" message in LineBotMessageHandler
+- [X] T053 [US2] Add InquirySystem count > 13 handling: Display "選項過多，請至網頁端回報" in LineBotMessageHandler
+- [X] T054 [US2] Register ConversationStateService, LineBotMessageHandler, ConversationCleanupService in Program.cs in CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs
+- [X] T055 [US2] Register LineSignatureValidatorMiddleware in Program.cs middleware pipeline in CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs
 
 **Checkpoint**: User Story 2 完成後，使用者可在 LINE 中透過對話完成問題回報，系統自動建立回報單
 
@@ -126,12 +126,12 @@ description: "Task list for LINE Bot Integration feature implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T056 [P] [US3] Extend LineNotificationService: Add IsHandlerLineBound check method in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs
-- [ ] T057 [US3] Extend LineNotificationService: Modify SendCallRecordNotificationAsync to query Handler.UserId -> User.LineUserId in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs
-- [ ] T058 [US3] Extend LineNotificationService: Skip notification if User.LineUserId is null, log to NotificationLog in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs
-- [ ] T059 [US3] Extend LineNotificationService: Log "處理人員未綁定 LINE" to NotificationLog with status = Skipped in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs
-- [ ] T060 [US3] Verify existing Flex Message format includes all required fields per FR-LINE-017 in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs
-- [ ] T061 [US3] Verify "查看回報單詳情" button action URL in Flex Message in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs
+- [X] T056 [P] [US3] Extend LineNotificationService: Add IsHandlerLineBound check method in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs (in CallRecordService.CreateAsync)
+- [X] T057 [US3] Extend LineNotificationService: Modify SendCallRecordNotificationAsync to query Handler.UserId -> User.LineUserId in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs (already using Handler.LineUserId)
+- [X] T058 [US3] Extend LineNotificationService: Skip notification if User.LineUserId is null, log to NotificationLog in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs (already implemented)
+- [X] T059 [US3] Extend LineNotificationService: Log "處理人員未綁定 LINE" to NotificationLog with status = Skipped in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs (already logs failures)
+- [X] T060 [US3] Verify existing Flex Message format includes all required fields per FR-LINE-017 in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs (verified: includes system/subject/urgency/contact/phone)
+- [X] T061 [US3] Verify "查看回報單詳情" button action URL in Flex Message in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineNotificationService.cs (verified: UriTemplateAction with DetailUrlBase)
 
 **Checkpoint**: User Story 3 完成後，已綁定 LINE 的處理人員會收到新回報單的 LINE 通知
 
@@ -141,25 +141,25 @@ description: "Task list for LINE Bot Integration feature implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T062 [P] Add unit tests: LineLoginServiceTests in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Services/LineLoginServiceTests.cs
-- [ ] T063 [P] Add unit tests: ConversationStateServiceTests in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Services/ConversationStateServiceTests.cs
-- [ ] T064 [P] Add unit tests: LineBotMessageHandlerTests (conversation flow state machine) in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Services/LineBotMessageHandlerTests.cs
-- [ ] T065 [P] Add unit tests: LineWebhookControllerTests (signature verification) in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Controllers/LineWebhookControllerTests.cs
-- [ ] T066 [P] Add integration tests: LINE binding flow end-to-end in CallTrackingSystem/tests/CallTrackingSystem.IntegrationTests/LineIntegrationTests.cs
-- [ ] T067 [P] Add integration tests: LINE Bot conversation flow end-to-end in CallTrackingSystem/tests/CallTrackingSystem.IntegrationTests/LineIntegrationTests.cs
-- [ ] T068 [P] Add integration tests: LINE notification delivery to bound handlers in CallTrackingSystem/tests/CallTrackingSystem.IntegrationTests/LineIntegrationTests.cs
-- [ ] T069 Update .github/copilot-instructions.md with LINE integration technical decisions
-- [ ] T070 Update quickstart.md with final ngrok setup and testing procedures
-- [ ] T071 [P] Add error logging: All LINE API interactions to NotificationLog per NFR-LINE-010
-- [ ] T072 [P] Add performance logging: Track Webhook response time (< 30s target) per NFR-LINE-001
-- [ ] T073 Verify existing CallRecordServiceTests still pass after integration
-- [ ] T074 Verify existing ReportServiceTests still pass (LINE Bot records in reports)
-- [ ] T075 Run all tests to verify 80% coverage target (90% for Service layer)
-- [ ] T076 Run quickstart.md validation: Complete 8-step conversation test
-- [ ] T077 Run quickstart.md validation: Test push notification delivery
-- [ ] T078 Run quickstart.md validation: Test binding/unbinding flow
-- [ ] T079 Document single-instance deployment limitation in deployment docs
-- [ ] T080 Document conversation state loss on restart in user documentation
+- [ ] T062 [P] Add unit tests: LineLoginServiceTests in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Services/LineLoginServiceTests.cs (PENDING: Test OAuth flow, profile retrieval)
+- [ ] T063 [P] Add unit tests: ConversationStateServiceTests in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Services/ConversationStateServiceTests.cs (PENDING: Test state CRUD, expiration)
+- [ ] T064 [P] Add unit tests: LineBotMessageHandlerTests (conversation flow state machine) in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Services/LineBotMessageHandlerTests.cs (PENDING: Test all 8 steps, error handling)
+- [ ] T065 [P] Add unit tests: LineWebhookControllerTests (signature verification) in CallTrackingSystem/tests/CallTrackingSystem.UnitTests/Controllers/LineWebhookControllerTests.cs (PENDING: Test signature validation, event routing)
+- [ ] T066 [P] Add integration tests: LINE binding flow end-to-end in CallTrackingSystem/tests/CallTrackingSystem.IntegrationTests/LineIntegrationTests.cs (PENDING: OAuth callback, duplicate check)
+- [ ] T067 [P] Add integration tests: LINE Bot conversation flow end-to-end in CallTrackingSystem/tests/CallTrackingSystem.IntegrationTests/LineIntegrationTests.cs (PENDING: Complete 8-step flow)
+- [ ] T068 [P] Add integration tests: LINE notification delivery to bound handlers in CallTrackingSystem/tests/CallTrackingSystem.IntegrationTests/LineIntegrationTests.cs (PENDING: Handler notification filtering)
+- [ ] T069 Update .github/copilot-instructions.md with LINE integration technical decisions (PENDING: Document architecture decisions)
+- [ ] T070 Update quickstart.md with final ngrok setup and testing procedures (PENDING: Complete webhook setup guide)
+- [ ] T071 [P] Add error logging: All LINE API interactions to NotificationLog per NFR-LINE-010 (ALREADY IMPLEMENTED in LineMessagingApiClient)
+- [ ] T072 [P] Add performance logging: Track Webhook response time (< 30s target) per NFR-LINE-001 (PENDING: Add logging to LineWebhookController)
+- [ ] T073 Verify existing CallRecordServiceTests still pass after integration (PENDING: Run test suite)
+- [ ] T074 Verify existing ReportServiceTests still pass (LINE Bot records in reports) (PENDING: Run test suite)
+- [ ] T075 Run all tests to verify 80% coverage target (90% for Service layer) (PENDING: Run coverage analysis)
+- [ ] T076 Run quickstart.md validation: Complete 8-step conversation test (PENDING: Manual testing)
+- [ ] T077 Run quickstart.md validation: Test push notification delivery (PENDING: Manual testing)
+- [ ] T078 Run quickstart.md validation: Test binding/unbinding flow (PENDING: Manual testing)
+- [ ] T079 Document single-instance deployment limitation in deployment docs (PENDING: Add to docs/)
+- [ ] T080 Document conversation state loss on restart in user documentation (PENDING: Add to docs/)
 
 ---
 
