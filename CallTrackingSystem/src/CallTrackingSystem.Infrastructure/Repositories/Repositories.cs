@@ -440,6 +440,22 @@ public class UserRepository : IUserRepository
             cancellationToken);
     }
 
+    public async Task<bool> IsLineUserIdBoundAsync(string lineUserId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.AnyAsync(
+            x => x.LineUserId == lineUserId,
+            cancellationToken);
+    }
+
+    public async Task<List<User>> GetUsersWithLineBoundAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Where(x => x.LineUserId != null)
+            .AsNoTracking()
+            .OrderBy(x => x.Username)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
     {
         _context.Users.Add(user);

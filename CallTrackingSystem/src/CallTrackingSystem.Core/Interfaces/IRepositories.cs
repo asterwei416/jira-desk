@@ -221,6 +221,16 @@ public interface IUserRepository
     Task<User?> GetByLineUserIdAsync(string lineUserId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 檢查 LINE User ID 是否已被綁定
+    /// </summary>
+    Task<bool> IsLineUserIdBoundAsync(string lineUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 取得所有已綁定 LINE 的使用者
+    /// </summary>
+    Task<List<User>> GetUsersWithLineBoundAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 新增使用者
     /// </summary>
     Task<User> AddAsync(User user, CancellationToken cancellationToken = default);

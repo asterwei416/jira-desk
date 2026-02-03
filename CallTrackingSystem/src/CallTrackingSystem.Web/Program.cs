@@ -25,6 +25,7 @@ builder.Services.AddControllersWithViews()
     });
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<ILineMessagingApiClient, LineMessagingApiClient>();
 builder.Services.AddResponseCaching();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

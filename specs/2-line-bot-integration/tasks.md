@@ -38,20 +38,20 @@ description: "Task list for LINE Bot Integration feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Create Migration: Add User.LineUserId, LineDisplayName, LineBoundAt fields in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Migrations/
-- [ ] T008 Create UserConfiguration with Fluent API for LINE fields in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Data/Configurations/UserConfiguration.cs
-- [ ] T009 Apply Migration using `dotnet ef database update` per quickstart.md
-- [ ] T010 [P] Add GetByLineUserIdAsync method to IUserRepository in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IUserRepository.cs
-- [ ] T011 [P] Add IsLineUserIdBoundAsync method to IUserRepository in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IUserRepository.cs
-- [ ] T012 [P] Add GetUsersWithLineBoundAsync method to IUserRepository in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IUserRepository.cs
-- [ ] T013 Implement GetByLineUserIdAsync in UserRepository in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Repositories/UserRepository.cs
-- [ ] T014 Implement IsLineUserIdBoundAsync in UserRepository in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Repositories/UserRepository.cs
-- [ ] T015 Implement GetUsersWithLineBoundAsync in UserRepository in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Repositories/UserRepository.cs
-- [ ] T016 Create ConversationStateDto in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/ConversationStateDto.cs
-- [ ] T017 Create ConversationStep enum in CallTrackingSystem/src/CallTrackingSystem.Core/Enums/ConversationStep.cs
-- [ ] T018 Create CallRecordFormData DTO in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/CallRecordFormData.cs
-- [ ] T019 Create LineMessagingApiClient for HTTP calls in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Services/LineMessagingApiClient.cs
-- [ ] T020 Register services in Program.cs: HttpClient, LineMessagingApiClient in CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs
+- [X] T007 Create Migration: Add User.LineUserId, LineDisplayName, LineBoundAt fields in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Migrations/
+- [X] T008 Create UserConfiguration with Fluent API for LINE fields in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Data/Configurations/UserConfiguration.cs
+- [X] T009 Apply Migration using `dotnet ef database update` per quickstart.md
+- [X] T010 [P] Add GetByLineUserIdAsync method to IUserRepository in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IUserRepository.cs
+- [X] T011 [P] Add IsLineUserIdBoundAsync method to IUserRepository in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IUserRepository.cs
+- [X] T012 [P] Add GetUsersWithLineBoundAsync method to IUserRepository in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IUserRepository.cs
+- [X] T013 Implement GetByLineUserIdAsync in UserRepository in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Repositories/UserRepository.cs
+- [X] T014 Implement IsLineUserIdBoundAsync in UserRepository in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Repositories/UserRepository.cs
+- [X] T015 Implement GetUsersWithLineBoundAsync in UserRepository in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Repositories/UserRepository.cs
+- [X] T016 Create ConversationStateDto in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/ConversationStateDto.cs
+- [X] T017 Create ConversationStep enum in CallTrackingSystem/src/CallTrackingSystem.Core/Enums/ConversationStep.cs
+- [X] T018 Create CallRecordFormData DTO in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/CallRecordFormData.cs
+- [X] T019 Create LineMessagingApiClient for HTTP calls in CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Services/LineMessagingApiClient.cs
+- [X] T020 Register services in Program.cs: HttpClient, LineMessagingApiClient in CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -65,18 +65,18 @@ description: "Task list for LINE Bot Integration feature implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T021 [P] [US1] Create ILineLoginService interface in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/ILineLoginService.cs
-- [ ] T022 [P] [US1] Create LineLoginRequest DTO in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/LineLoginRequest.cs
-- [ ] T023 [P] [US1] Create LineLoginResponse DTO in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/LineLoginResponse.cs
-- [ ] T024 [US1] Implement LineLoginService: OAuth 2.0 flow with State parameter in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineLoginService.cs
-- [ ] T025 [US1] Create LineAuthController: GET /auth/line-login endpoint in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/LineAuthController.cs
-- [ ] T026 [US1] Implement LineAuthController: GET /auth/line-callback endpoint with State verification in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/LineAuthController.cs
-- [ ] T027 [US1] Add LINE binding UI section to User Settings view in CallTrackingSystem/src/CallTrackingSystem.Web/Views/User/Settings.cshtml
-- [ ] T028 [US1] Add UserController action: POST /user/line-binding for binding in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/UserController.cs
-- [ ] T029 [US1] Add UserController action: DELETE /user/line-binding for unbinding in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/UserController.cs
-- [ ] T030 [US1] Add duplicate LINE User ID check in LineLoginService per FR-LINE-004
-- [ ] T031 [US1] Add Guest role binding restriction in Settings.cshtml per FR-LINE-001
-- [ ] T032 [US1] Add TempData message display for binding success/failure in Settings.cshtml
+- [X] T021 [P] [US1] Create ILineLoginService interface in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/ILineLoginService.cs
+- [X] T022 [P] [US1] Create LineLoginRequest DTO in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/LineLoginRequest.cs (LineLoginProfile)
+- [X] T023 [P] [US1] Create LineLoginResponse DTO in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/LineLoginResponse.cs (LineLoginProfile)
+- [X] T024 [US1] Implement LineLoginService: OAuth 2.0 flow with State parameter in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineLoginService.cs
+- [X] T025 [US1] Create LineAuthController: GET /auth/line-login endpoint in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/LineAuthController.cs (in AuthController)
+- [X] T026 [US1] Implement LineAuthController: GET /auth/line-callback endpoint with State verification in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/LineAuthController.cs (in AuthController)
+- [X] T027 [US1] Add LINE binding UI section to User Settings view in CallTrackingSystem/src/CallTrackingSystem.Web/Views/User/Settings.cshtml
+- [X] T028 [US1] Add UserController action: POST /user/line-binding for binding in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/UserController.cs
+- [X] T029 [US1] Add UserController action: DELETE /user/line-binding for unbinding in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/UserController.cs
+- [X] T030 [US1] Add duplicate LINE User ID check in LineLoginService per FR-LINE-004 (in UserService.BindLineAccountAsync)
+- [X] T031 [US1] Add Guest role binding restriction in Settings.cshtml per FR-LINE-001
+- [X] T032 [US1] Add TempData message display for binding success/failure in Settings.cshtml
 
 **Checkpoint**: User Story 1 完成後，使用者可在網頁端完成 LINE 帳號綁定與解綁
 
@@ -90,22 +90,22 @@ description: "Task list for LINE Bot Integration feature implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T033 [P] [US2] Create IConversationStateService interface in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IConversationStateService.cs
-- [ ] T034 [P] [US2] Create ILineBotMessageHandler interface in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/ILineBotMessageHandler.cs
-- [ ] T035 [P] [US2] Create LineWebhookEventDto in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/LineWebhookEventDto.cs
-- [ ] T036 [US2] Implement ConversationStateService with ConcurrentDictionary in CallTrackingSystem/src/CallTrackingSystem.Core/Services/ConversationStateService.cs
-- [ ] T037 [US2] Implement BackgroundService for conversation timeout cleanup (5 min) in CallTrackingSystem/src/CallTrackingSystem.Web/Services/ConversationCleanupService.cs
-- [ ] T038 [US2] Implement LineBotMessageHandler: HandleTextMessageAsync for "回報問題" trigger in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T039 [US2] Implement LineBotMessageHandler: Handle AwaitingSubject step in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T040 [US2] Implement LineBotMessageHandler: Handle AwaitingContent step in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T041 [US2] Implement LineBotMessageHandler: Handle AwaitingInquirySystem with Quick Reply (max 13) in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T042 [US2] Implement LineBotMessageHandler: Handle AwaitingUrgencyLevel with Quick Reply in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T043 [US2] Implement LineBotMessageHandler: Handle AwaitingContactName step in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T044 [US2] Implement LineBotMessageHandler: Handle AwaitingContactPhone with Taiwan phone regex validation in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T045 [US2] Implement LineBotMessageHandler: Handle AwaitingConfirmation with summary display in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T046 [US2] Implement LineBotMessageHandler: HandlePostbackAsync for "確認送出" button in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T047 [US2] Implement LineBotMessageHandler: Call CallRecordService.CreateAsync in confirmation handler in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
-- [ ] T048 [US2] Implement LineBotMessageHandler: "取消" command handler to clear conversation state in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T033 [P] [US2] Create IConversationStateService interface in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/IConversationStateService.cs
+- [X] T034 [P] [US2] Create ILineBotMessageHandler interface in CallTrackingSystem/src/CallTrackingSystem.Core/Interfaces/ILineBotMessageHandler.cs
+- [X] T035 [P] [US2] Create LineWebhookEventDto in CallTrackingSystem/src/CallTrackingSystem.Core/DTOs/LineWebhookEventDto.cs
+- [X] T036 [US2] Implement ConversationStateService with ConcurrentDictionary in CallTrackingSystem/src/CallTrackingSystem.Core/Services/ConversationStateService.cs
+- [X] T037 [US2] Implement BackgroundService for conversation timeout cleanup (5 min) in CallTrackingSystem/src/CallTrackingSystem.Web/Services/ConversationCleanupService.cs
+- [X] T038 [US2] Implement LineBotMessageHandler: HandleTextMessageAsync for "回報問題" trigger in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T039 [US2] Implement LineBotMessageHandler: Handle AwaitingSubject step in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T040 [US2] Implement LineBotMessageHandler: Handle AwaitingContent step in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T041 [US2] Implement LineBotMessageHandler: Handle AwaitingInquirySystem with Quick Reply (max 13) in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T042 [US2] Implement LineBotMessageHandler: Handle AwaitingUrgencyLevel with Quick Reply in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T043 [US2] Implement LineBotMessageHandler: Handle AwaitingContactName step in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T044 [US2] Implement LineBotMessageHandler: Handle AwaitingContactPhone with Taiwan phone regex validation in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T045 [US2] Implement LineBotMessageHandler: Handle AwaitingConfirmation with summary display in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T046 [US2] Implement LineBotMessageHandler: HandlePostbackAsync for "確認送出" button in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T047 [US2] Implement LineBotMessageHandler: Call CallRecordService.CreateAsync in confirmation handler in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
+- [X] T048 [US2] Implement LineBotMessageHandler: "取消" command handler to clear conversation state in CallTrackingSystem/src/CallTrackingSystem.Core/Services/LineBotMessageHandler.cs
 - [ ] T049 [US2] Create LineSignatureValidatorMiddleware for X-Line-Signature verification in CallTrackingSystem/src/CallTrackingSystem.Web/Middleware/LineSignatureValidatorMiddleware.cs
 - [ ] T050 [US2] Create LineWebhookController: POST /api/line/webhook endpoint in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/Api/LineWebhookController.cs
 - [ ] T051 [US2] Implement LineWebhookController: Route events to LineBotMessageHandler in CallTrackingSystem/src/CallTrackingSystem.Web/Controllers/Api/LineWebhookController.cs

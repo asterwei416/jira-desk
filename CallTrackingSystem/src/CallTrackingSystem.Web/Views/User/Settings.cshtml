@@ -1,0 +1,120 @@
+@model CallTrackingSystem.Core.Entities.User
+
+@{
+    ViewData["Title"] = "個人設定";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h2 class="h5 mb-4">個人設定</h2>
+
+            @* 成功/錯誤訊息 *@
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉"></button>
+                </div>
+            }
+
+            @* 基本資訊 *@
+            <div class="mb-4">
+                <h3 class="h6 mb-3">基本資訊</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="text-muted small">使用者名稱</label>
+                        <div>@Model.Username</div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="text-muted small">顯示名稱</label>
+                        <div>@Model.DisplayName</div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="text-muted small">角色</label>
+                        <div>
+                            @switch (Model.Role)
+                            {
+                                case CallTrackingSystem.Core.Enums.UserRole.Admin:
+                                    <span class="badge bg-danger">管理員</span>
+                                    break;
+                                case CallTrackingSystem.Core.Enums.UserRole.Staff:
+                                    <span class="badge bg-primary">職員</span>
+                                    break;
+                                case CallTrackingSystem.Core.Enums.UserRole.Guest:
+                                    <span class="badge bg-secondary">訪客</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            @* LINE 綁定區域 *@
+            <div class="mb-4">
+                <h3 class="h6 mb-3">LINE 官方帳號綁定</h3>
+                
+                @if (Model.Role == CallTrackingSystem.Core.Enums.UserRole.Guest)
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 訪客角色無法綁定 LINE 帳號，請聯絡管理員變更角色權限。
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.LineUserId))
+                {
+                    @* 已綁定狀態 *@
+                    <div class="card bg-light p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <i class="bi bi-check-circle-fill text-success"></i> 
+                                <strong>已綁定</strong>
+                            </div>
+                            <form method="post" action="/user/line-binding/remove" onsubmit="return confirm('確定要解除 LINE 帳號綁定嗎？');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">解除綁定</button>
+                            </form>
+                        </div>
+                        <div class="text-muted small">
+                            <div><strong>LINE 顯示名稱:</strong> @Model.LineDisplayName</div>
+                            @if (Model.LineBoundAt.HasValue)
+                            {
+                                <div><strong>綁定時間:</strong> @Model.LineBoundAt.Value.ToString("yyyy/MM/dd HH:mm")</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle"></i> 綁定後，您可以在 LINE 對話視窗中回報問題，並接收系統通知。
+                    </div>
+                }
+                else
+                {
+                    @* 未綁定狀態 *@
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 綁定 LINE 官方帳號後，您可以直接在 LINE 回報問題，並接收即時通知。
+                    </div>
+                    <a href="/api/auth/line/login" class="btn btn-success">
+                        <i class="bi bi-line"></i> 綁定 LINE 帳號
+                    </a>
+                }
+            </div>
+
+            <hr />
+
+            @* 密碼變更區域（選配） *@
+            <div class="mb-4">
+                <h3 class="h6 mb-3">密碼變更</h3>
+                <p class="text-muted small">若需變更密碼，請聯絡系統管理員。</p>
+            </div>
+
+        </div>
+    </div>
+</div>
