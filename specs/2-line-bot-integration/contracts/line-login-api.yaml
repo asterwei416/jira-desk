@@ -1,0 +1,270 @@
+# LINE Login OAuth 2.0 Contract
+
+**Version**: 1.0.0  
+**Authorization Endpoint**: `https://access.line.me/oauth2/v2.1/authorize`  
+**Token Endpoint**: `https://api.line.me/oauth2/v2.1/token`  
+**Profile Endpoint**: `https://api.line.me/v2/profile`
+
+---
+
+## Step 1: 啟動 OAuth 授權流程
+
+### Request
+
+**Method**: `GET`  
+**URL**: `/auth/line-login` (應用程式端點)
+
+**Controller Action**:
+```csharp
+[Authorize]
+public IActionResult LineLogin()
+{
+    var state = Guid.NewGuid().ToString();
+    HttpContext.Session.SetString("LineLoginState", state);
+    
+    var authUrl = $"https://access.line.me/oauth2/v2.1/authorize?" +
+        $"response_type=code&" +
+        $"client_id={_lineClientId}&" +
+        $"redirect_uri={Uri.EscapeDataString(_callbackUrl)}&" +
+        $"state={state}&" +
+        $"scope=profile%20openid";
+    
+    return Redirect(authUrl);
+}
+```
+
+**Redirect to LINE**:
+```
+https://access.line.me/oauth2/v2.1/authorize?
+  response_type=code&
+  client_id=YOUR_CLIENT_ID&
+  redirect_uri=https://your-domain.com/auth/line-callback&
+  state=uuid-generated-state&
+  scope=profile openid
+```
+
+---
+
+## Step 2: LINE Callback 回調
+
+### Request (LINE Platform 呼叫)
+
+**Method**: `GET`  
+**URL**: `/auth/line-callback`
+
+**Query Parameters**:
+- `code`: Authorization Code（用於交換 Access Token）
+- `state`: 原始 State 參數（需驗證）
+
+**Example**:
+```
+GET /auth/line-callback?code=abc123&state=uuid-generated-state
+```
+
+### Controller Action
+
+```csharp
+[Authorize]
+public async Task<IActionResult> LineCallback(string code, string state)
+{
+    // 1. 驗證 State
+    var sessionState = HttpContext.Session.GetString("LineLoginState");
+    if (sessionState != state)
+    {
+        TempData["Error"] = "驗證失敗，請重試";
+        return RedirectToAction("Settings", "User");
+    }
+
+    // 2. 交換 Access Token
+    var tokenResponse = await ExchangeCodeForTokenAsync(code);
+    if (!tokenResponse.Success)
+    {
+        TempData["Error"] = tokenResponse.ErrorMessage;
+        return RedirectToAction("Settings", "User");
+    }
+
+    // 3. 取得 Profile 資訊
+    var profile = await GetLineProfileAsync(tokenResponse.AccessToken);
+    
+    // 4. 綁定使用者
+    var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+    var success = await _lineLoginService.BindUserAsync(
+        userId, profile.UserId, profile.DisplayName);
+
+    if (success)
+    {
+        TempData["Success"] = $"已成功綁定 LINE 帳號：{profile.DisplayName}";
+    }
+    else
+    {
+        TempData["Error"] = "此 LINE 帳號已被其他使用者綁定";
+    }
+
+    return RedirectToAction("Settings", "User");
+}
+```
+
+---
+
+## Step 3: 交換 Access Token
+
+### Request
+
+**Method**: `POST`  
+**URL**: `https://api.line.me/oauth2/v2.1/token`  
+**Content-Type**: `application/x-www-form-urlencoded`
+
+**Body Parameters**:
+```
+grant_type=authorization_code
+code=abc123
+redirect_uri=https://your-domain.com/auth/line-callback
+client_id=YOUR_CLIENT_ID
+client_secret=YOUR_CLIENT_SECRET
+```
+
+### Response (Success)
+
+```json
+{
+  "access_token": "eyJ...",
+  "expires_in": 2592000,
+  "id_token": "eyJ...",
+  "refresh_token": "xyz...",
+  "scope": "profile openid",
+  "token_type": "Bearer"
+}
+```
+
+### Response (Error)
+
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "Authorization code has expired"
+}
+```
+
+---
+
+## Step 4: 取得 LINE Profile
+
+### Request
+
+**Method**: `GET`  
+**URL**: `https://api.line.me/v2/profile`  
+**Authorization**: `Bearer {access_token}`
+
+### Response (Success)
+
+```json
+{
+  "userId": "Uabcdef1234567890abcdef1234567890",
+  "displayName": "張小明",
+  "pictureUrl": "https://profile.line-scdn.net/...",
+  "statusMessage": "Hello, LINE!"
+}
+```
+
+---
+
+## 綁定 API（內部使用）
+
+### Request
+
+**Method**: `POST`  
+**URL**: `/api/user/line-binding`  
+**Authorization**: `Bearer {JWT}` or Cookie  
+**Content-Type**: `application/json`
+
+**Body**:
+```json
+{
+  "userId": 5,
+  "lineUserId": "Uabcdef1234567890abcdef1234567890",
+  "lineDisplayName": "張小明"
+}
+```
+
+### Response (Success)
+
+```json
+{
+  "success": true,
+  "message": "已成功綁定 LINE 帳號"
+}
+```
+
+### Response (Error - LINE 帳號已被綁定)
+
+```json
+{
+  "success": false,
+  "message": "此 LINE 帳號已被其他使用者綁定"
+}
+```
+
+---
+
+## 解除綁定 API
+
+### Request
+
+**Method**: `DELETE`  
+**URL**: `/api/user/line-binding`  
+**Authorization**: `Bearer {JWT}` or Cookie
+
+### Response (Success)
+
+```json
+{
+  "success": true,
+  "message": "已成功解除 LINE 帳號綁定"
+}
+```
+
+---
+
+## 錯誤處理
+
+### 常見錯誤碼
+
+| Error Code | 說明 | 處理方式 |
+|-----------|------|---------|
+| `invalid_grant` | Authorization Code 已過期 | 提示使用者重新授權 |
+| `invalid_client` | Client ID/Secret 錯誤 | 檢查 appsettings.json 設定 |
+| `redirect_uri_mismatch` | Callback URL 不匹配 | 檢查 LINE Developers Console 設定 |
+| `server_error` | LINE Platform 伺服器錯誤 | 記錄 Log 並稍後重試 |
+
+---
+
+## 安全性考量
+
+1. **State 參數驗證**: 防止 CSRF 攻擊
+2. **HTTPS 限制**: LINE Platform 僅接受 HTTPS Callback URL
+3. **Client Secret 保護**: 不可暴露於前端程式碼
+4. **Access Token 不持久化**: 取得 Profile 後即丟棄，僅儲存 UserId
+
+---
+
+## 本地開發設定
+
+### 使用 ngrok 測試 OAuth Callback
+
+```powershell
+# 1. 啟動應用程式
+dotnet run --project src/CallTrackingSystem.Web
+
+# 2. 啟動 ngrok
+ngrok http 5000
+
+# 3. 更新 appsettings.Development.json
+{
+  "LineLogin": {
+    "CallbackUrl": "https://abc123.ngrok.io/auth/line-callback"
+  }
+}
+
+# 4. 在 LINE Developers Console 設定 Callback URL
+# https://abc123.ngrok.io/auth/line-callback
+```

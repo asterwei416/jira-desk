@@ -1,0 +1,249 @@
+# LINE Bot Webhook API Contract
+
+**Version**: 1.0.0  
+**Base URL**: `https://your-domain.com/api/line`  
+**Protocol**: HTTPS Only
+
+---
+
+## Endpoint: Receive LINE Bot Webhook Events
+
+### Request
+
+**Method**: `POST`  
+**Path**: `/webhook`  
+**Content-Type**: `application/json`  
+**Required Headers**:
+- `X-Line-Signature`: HMAC-SHA256 簽章（使用 Channel Secret）
+
+**Request Body** (LINE Platform 傳送):
+
+```json
+{
+  "destination": "U1234567890abcdef1234567890abcdef",
+  "events": [
+    {
+      "type": "message",
+      "replyToken": "reply-token-string",
+      "source": {
+        "type": "user",
+        "userId": "Uabcdef1234567890abcdef1234567890"
+      },
+      "timestamp": 1609459200000,
+      "message": {
+        "type": "text",
+        "id": "message-id",
+        "text": "回報問題"
+      }
+    }
+  ]
+}
+```
+
+**Supported Event Types**:
+- `message.text`: 使用者文字訊息
+- `postback`: Quick Reply 按鈕回應
+
+### Response
+
+**Success** (200 OK):
+```json
+{}
+```
+（LINE Platform 僅檢查 HTTP Status Code，不解析 Response Body）
+
+**Failure** (401 Unauthorized):
+```json
+{
+  "error": "Invalid signature"
+}
+```
+
+---
+
+## 簽章驗證邏輯
+
+```csharp
+private bool VerifySignature(string requestBody, string signature)
+{
+    using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_channelSecret));
+    var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(requestBody));
+    var computedSignature = Convert.ToBase64String(hash);
+    return computedSignature == signature;
+}
+```
+
+---
+
+## 對話流程處理
+
+### 使用者輸入「回報問題」
+
+**Webhook Event**:
+```json
+{
+  "type": "message",
+  "message": {
+    "type": "text",
+    "text": "回報問題"
+  }
+}
+```
+
+**Bot 回應**（Reply Message API）:
+```json
+{
+  "replyToken": "reply-token-string",
+  "messages": [
+    {
+      "type": "text",
+      "text": "您好！請問要回報什麼問題呢？請輸入問題標題。"
+    }
+  ]
+}
+```
+
+---
+
+### 使用者選擇 InquirySystem（Quick Reply）
+
+**Webhook Event**:
+```json
+{
+  "type": "postback",
+  "postback": {
+    "data": "inquiry_system:3"
+  }
+}
+```
+
+**Bot 回應**（Reply Message API with Quick Reply）:
+```json
+{
+  "replyToken": "reply-token-string",
+  "messages": [
+    {
+      "type": "text",
+      "text": "請選擇緊急程度：",
+      "quickReply": {
+        "items": [
+          {
+            "type": "action",
+            "action": {
+              "type": "postback",
+              "label": "🟢 低",
+              "data": "urgency:Low"
+            }
+          },
+          {
+            "type": "action",
+            "action": {
+              "type": "postback",
+              "label": "🟡 中",
+              "data": "urgency:Medium"
+            }
+          },
+          {
+            "type": "action",
+            "action": {
+              "type": "postback",
+              "label": "🔴 高",
+              "data": "urgency:High"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Push Notification（Flex Message）
+
+**Endpoint**: `https://api.line.me/v2/bot/message/push`  
+**Method**: `POST`  
+**Authorization**: `Bearer {Channel Access Token}`
+
+**Request Body**:
+```json
+{
+  "to": "Uabcdef1234567890abcdef1234567890",
+  "messages": [
+    {
+      "type": "flex",
+      "altText": "新來電回報：客戶反應系統異常",
+      "contents": {
+        "type": "bubble",
+        "header": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "text",
+              "text": "🔔 新來電回報",
+              "weight": "bold",
+              "size": "xl",
+              "color": "#FFFFFF"
+            }
+          ],
+          "backgroundColor": "#FF6B6B"
+        },
+        "body": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "text",
+              "text": "問題標題：客戶反應系統異常",
+              "wrap": true,
+              "weight": "bold"
+            },
+            {
+              "type": "separator",
+              "margin": "md"
+            },
+            {
+              "type": "text",
+              "text": "所屬單位：資訊部",
+              "margin": "md",
+              "size": "sm",
+              "color": "#999999"
+            },
+            {
+              "type": "text",
+              "text": "緊急程度：🔴 High",
+              "margin": "md",
+              "size": "sm",
+              "color": "#FF0000"
+            },
+            {
+              "type": "text",
+              "text": "回報時間：2026/02/03 14:30",
+              "margin": "md",
+              "size": "sm",
+              "color": "#999999"
+            }
+          ]
+        },
+        "footer": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "查看詳情",
+                "uri": "https://your-domain.com/call-records/123"
+              },
+              "style": "primary"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+```

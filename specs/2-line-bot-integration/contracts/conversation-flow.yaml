@@ -1,0 +1,360 @@
+# Conversation Flow State Machine
+
+**Version**: 1.0.0  
+**Purpose**: 定義 LINE Bot 對話回報問題的狀態機契約
+
+---
+
+## 狀態定義
+
+```csharp
+public enum ConversationStep
+{
+    Idle = 0,                    // 閒置狀態
+    AwaitingSubject = 1,         // 等待問題標題
+    AwaitingContent = 2,         // 等待問題內容
+    AwaitingInquirySystem = 3,   // 等待選擇所屬單位
+    AwaitingUrgencyLevel = 4,    // 等待選擇緊急程度
+    AwaitingContactName = 5,     // 等待聯絡人姓名
+    AwaitingContactPhone = 6,    // 等待聯絡電話
+    AwaitingConfirmation = 7     // 等待確認送出
+}
+```
+
+---
+
+## 狀態轉移表
+
+| 當前狀態 | 觸發事件 | 驗證規則 | 下一狀態 | Bot 回應 |
+|---------|---------|---------|---------|---------|
+| Idle | 使用者輸入「回報問題」 | 檢查使用者是否已綁定 LINE | AwaitingSubject | 「您好！請問要回報什麼問題呢？請輸入問題標題。」 |
+| AwaitingSubject | 使用者輸入文字 | 長度 1-100 字元 | AwaitingContent | 「收到，問題標題為『{subject}』。請描述問題的詳細內容：」 |
+| AwaitingContent | 使用者輸入文字 | 長度 1-500 字元 | AwaitingInquirySystem | 顯示 InquirySystem Quick Reply 選單 |
+| AwaitingInquirySystem | 使用者點擊 Quick Reply | 檢查 InquirySystemId 存在 | AwaitingUrgencyLevel | 顯示緊急程度 Quick Reply（🟢 低、🟡 中、🔴 高） |
+| AwaitingUrgencyLevel | 使用者點擊 Quick Reply | UrgencyLevel 為 Low/Medium/High | AwaitingContactName | 「請提供顧客聯絡人姓名：」 |
+| AwaitingContactName | 使用者輸入文字 | 長度 1-50 字元 | AwaitingContactPhone | 「請提供顧客聯絡電話：」 |
+| AwaitingContactPhone | 使用者輸入文字 | 符合台灣手機/市話格式 | AwaitingConfirmation | 顯示摘要 + 確認按鈕 |
+| AwaitingConfirmation | 使用者點擊「確認送出」 | - | Idle | 「✅ 回報單已成功建立！回報單號：#{id}」 + 查看連結 |
+| Any | 使用者輸入「取消」 | - | Idle | 「已取消回報流程」 |
+
+---
+
+## 驗證規則詳細定義
+
+### 1. 問題標題（Subject）
+
+```csharp
+public bool ValidateSubject(string subject, out string errorMessage)
+{
+    if (string.IsNullOrWhiteSpace(subject))
+    {
+        errorMessage = "問題標題不可為空白";
+        return false;
+    }
+    
+    if (subject.Length > 100)
+    {
+        errorMessage = "問題標題不可超過 100 字元";
+        return false;
+    }
+    
+    errorMessage = null;
+    return true;
+}
+```
+
+**錯誤回應**: 「問題標題不可為空白，請重新輸入。」
+
+---
+
+### 2. 問題內容（Content）
+
+```csharp
+public bool ValidateContent(string content, out string errorMessage)
+{
+    if (string.IsNullOrWhiteSpace(content))
+    {
+        errorMessage = "問題內容不可為空白";
+        return false;
+    }
+    
+    if (content.Length > 500)
+    {
+        errorMessage = "問題內容不可超過 500 字元";
+        return false;
+    }
+    
+    errorMessage = null;
+    return true;
+}
+```
+
+**錯誤回應**: 「問題內容不可超過 500 字元，請精簡描述。」
+
+---
+
+### 3. 問題所屬單位（InquirySystem）
+
+```csharp
+public async Task<bool> ValidateInquirySystem(int inquirySystemId, out string errorMessage)
+{
+    var inquirySystem = await _inquirySystemRepository.GetByIdAsync(inquirySystemId);
+    if (inquirySystem == null)
+    {
+        errorMessage = "所選單位不存在";
+        return false;
+    }
+    
+    errorMessage = null;
+    return true;
+}
+```
+
+**特殊情況**: InquirySystem 超過 13 個選項
+
+```csharp
+public async Task<object> CreateInquirySystemQuickReply()
+{
+    var inquirySystems = await _inquirySystemRepository.GetAllAsync();
+    
+    if (inquirySystems.Count() > 13)
+    {
+        // 拒絕回報並引導至網頁
+        return new
+        {
+            type = "text",
+            text = "選項過多，請至網頁端回報問題\n" +
+                   $"{_webBaseUrl}/call-records/create"
+        };
+    }
+    
+    // 正常顯示 Quick Reply
+    return new
+    {
+        type = "text",
+        text = "請選擇問題所屬單位：",
+        quickReply = new
+        {
+            items = inquirySystems.Select(s => new
+            {
+                type = "action",
+                action = new
+                {
+                    type = "postback",
+                    label = s.Name,
+                    data = $"inquiry_system:{s.Id}"
+                }
+            }).ToArray()
+        }
+    };
+}
+```
+
+---
+
+### 4. 聯絡電話（ContactPhone）
+
+```csharp
+public bool ValidateContactPhone(string phone, out string errorMessage)
+{
+    // 移除空白與 - 符號
+    var cleanPhone = phone.Replace(" ", "").Replace("-", "");
+    
+    // 台灣手機格式：09xx-xxx-xxx（10 碼）
+    if (Regex.IsMatch(cleanPhone, @"^09\d{8}$"))
+    {
+        errorMessage = null;
+        return true;
+    }
+    
+    // 台灣市話格式：0x-xxxx-xxxx（9-10 碼）
+    if (Regex.IsMatch(cleanPhone, @"^0\d{1,2}\d{7,8}$"))
+    {
+        errorMessage = null;
+        return true;
+    }
+    
+    errorMessage = "電話格式不正確";
+    return false;
+}
+```
+
+**錯誤回應**: 「電話格式不正確，請輸入正確的手機號碼（例：0912-345-678）或市話（例：02-1234-5678）」
+
+---
+
+## 對話逾時處理
+
+### 逾時策略
+
+- **逾時時間**: 5 分鐘（從 LastActivityAt 計算）
+- **檢查頻率**: BackgroundService 每 1 分鐘檢查一次
+- **逾時行為**: 清除 ConversationState，使用者需重新啟動流程
+
+```csharp
+// CallTrackingSystem.Infrastructure/Services/ConversationCleanupService.cs
+protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+{
+    while (!stoppingToken.IsCancellationRequested)
+    {
+        try
+        {
+            var timeout = TimeSpan.FromMinutes(5);
+            using var scope = _serviceProvider.CreateScope();
+            var stateService = scope.ServiceProvider
+                .GetRequiredService<ConversationStateService>();
+
+            stateService.CleanupExpiredStates(timeout);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "對話狀態清理失敗");
+        }
+
+        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+    }
+}
+```
+
+---
+
+## 確認摘要訊息
+
+### AwaitingConfirmation 狀態顯示的摘要
+
+```json
+{
+  "type": "text",
+  "text": "請確認以下資訊是否正確：\n\n" +
+          "📋 問題標題：客戶反應系統異常\n" +
+          "📝 問題內容：系統登入時出現錯誤訊息...\n" +
+          "🏢 所屬單位：資訊部\n" +
+          "🔴 緊急程度：高\n" +
+          "👤 聯絡人：王小明\n" +
+          "📞 電話：0912-345-678",
+  "quickReply": {
+    "items": [
+      {
+        "type": "action",
+        "action": {
+          "type": "postback",
+          "label": "✅ 確認送出",
+          "data": "confirm:submit"
+        }
+      },
+      {
+        "type": "action",
+        "action": {
+          "type": "postback",
+          "label": "🔄 重新填寫",
+          "data": "confirm:restart"
+        }
+      },
+      {
+        "type": "action",
+        "action": {
+          "type": "postback",
+          "label": "❌ 取消",
+          "data": "confirm:cancel"
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 成功送出訊息
+
+### 呼叫 CallRecordService.CreateAsync() 成功後
+
+```csharp
+var successMessage = new
+{
+    type = "text",
+    text = $"✅ 回報單已成功建立！\n\n" +
+           $"回報單號：#{callRecord.Id}\n" +
+           $"建立時間：{callRecord.CreatedAt:yyyy/MM/dd HH:mm}\n\n" +
+           $"點擊下方按鈕查看詳情：",
+    quickReply = new
+    {
+        items = new[]
+        {
+            new
+            {
+                type = "action",
+                action = new
+                {
+                    type = "uri",
+                    label = "查看回報單詳情",
+                    uri = $"{_webBaseUrl}/call-records/{callRecord.Id}"
+                }
+            }
+        }
+    }
+};
+```
+
+---
+
+## 錯誤處理
+
+### 未綁定使用者嘗試回報問題
+
+```json
+{
+  "type": "text",
+  "text": "❌ 請先在網頁端完成 LINE 帳號綁定才能使用此功能\n\n" +
+          "請點擊下方連結前往綁定：",
+  "quickReply": {
+    "items": [
+      {
+        "type": "action",
+        "action": {
+          "type": "uri",
+          "label": "前往綁定 LINE 帳號",
+          "uri": "https://your-domain.com/user/settings"
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 取消流程
+
+### 使用者隨時輸入「取消」
+
+```csharp
+public async Task HandleCancellationAsync(string lineUserId)
+{
+    _conversationStateService.ClearState(lineUserId);
+    
+    await _lineApiClient.SendReplyMessageAsync(lineUserId, new
+    {
+        type = "text",
+        text = "已取消回報流程，如需重新回報請輸入「回報問題」"
+    });
+}
+```
+
+---
+
+## 狀態持久化策略
+
+**重要**: 對話狀態**不持久化至資料庫**，僅儲存於 In-Memory ConcurrentDictionary。
+
+### 重啟影響
+
+- ✅ 應用程式重啟時，所有對話狀態將遺失
+- ✅ 使用者需重新啟動回報流程
+- ✅ 此為刻意的設計取捨（符合憲法「不使用 Redis」原則）
+
+### 單實例限制
+
+- ⚠️ 本功能僅支援單實例部署環境
+- ⚠️ 不支援負載平衡或多實例部署
+- ⚠️ 在 quickstart.md 中明確標註此限制

@@ -1,133 +1,121 @@
-# Copilot 開發指引（CallTrackingSystem）
+# Copilot Instructions (MANDATORY)
 
-> 專案：客服來電問題紀錄與分析系統
-> 技術棧：.NET 8 / ASP.NET Core MVC + Web API / EF Core / Azure SQL / LINE Messaging API
-> 架構：Clean Architecture（三層：Web / Core / Infrastructure）
-> 語言：繁體中文（錯誤訊息、文件、註解）
+You are contributing to **CallTrackingSystem** (客服來電問題紀錄與分析系統), a brownfield project following Specification-Driven Development (SDD) using Spec Kit.
 
----
-
-## 🎯 目標與原則
-
-- **可讀性優先**：命名清楚，避免縮寫
-- **單一職責**：服務/方法聚焦單一任務
-- **型別安全**：避免 `dynamic` / `object`
-- **錯誤處理**：明確例外與訊息（繁中）
-- **測試優先**：xUnit + Moq + FluentAssertions
-- **WCAG AA**：UI 一致、可讀
+These rules are **NON-NEGOTIABLE**.
 
 ---
 
-## 📁 專案結構與責任
+## 1. Specification Rules (STRICT)
 
+- ALL specifications MUST be feature-level specs under `/specs/<feature-id>/`
+- Each feature MUST contain: `spec.md`, `plan.md`, `tasks.md`
+- System-wide or monolithic specs are NOT allowed
+- `spec.md` MUST include sections: Goal, User Capability, Scope, Constraints, Relationship to Existing Features
+
+### Feature Relationship Declaration (REQUIRED)
+
+Every `spec.md` MUST declare:
+- **Builds upon**: (existing features this extends)
+- **Depends on**: (features required to function)
+- **Does not modify**: (features explicitly untouched)
+
+If none apply, write "None" explicitly.
+
+---
+
+## 2. Authority Hierarchy
+
+1. `.specify/memory/constitution.md` (highest authority)
+2. Feature-level specs (`/specs/*/`)
+3. This document (project conventions)
+
+**If conflict detected**: Report clearly, do NOT guess.
+
+---
+
+## 3. Architecture (Clean Architecture)
+
+### Layer Responsibilities
+- **Web** (`CallTrackingSystem.Web`): MVC Controllers + API Endpoints + DI configuration ([Program.cs](CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs))
+- **Core** (`CallTrackingSystem.Core`): Domain Entities + Business Services + DTOs + Interfaces (例: [CallRecordService.cs](CallTrackingSystem/src/CallTrackingSystem.Core/Services/CallRecordService.cs))
+- **Infrastructure** (`CallTrackingSystem.Infrastructure`): EF Core + Repositories + External integrations (LINE, Email)
+
+### Critical Data Flows
+1. **新增來電記錄**: `CallRecordService` 建立實體 → 自動指派處理人員 → 寫入變更歷史 → 發送 LINE 通知（失敗不阻斷）
+2. **Excel 報表**: `ReportService` 使用 ClosedXML 生成三工作表（篩選摘要/明細/統計），見 [ReportService.cs](CallTrackingSystem/src/CallTrackingSystem.Core/Services/ReportService.cs)
+3. **編輯鎖定**: API 端點 `/api/call-records/{id}/lock`，背景清理服務每 5 分鐘執行
+
+---
+
+## 4. Development Workflow (MANDATORY)
+
+### Testing Workflow
+1. **啟動服務**: 見 [TESTING_SOP.md](CallTrackingSystem/docs/TESTING_SOP.md)
+   - 一鍵 Smoke Test: `./scripts/run-smoke-tests.ps1 -BaseUrl "http://localhost:5000"`
+2. **LINE 通知測試**: 見 [LINE_NOTIFICATION_TEST.md](CallTrackingSystem/docs/LINE_NOTIFICATION_TEST.md)
+
+### Migration Commands
+```powershell
+# 建立 Migration
+dotnet ef migrations add <Name> --project src/CallTrackingSystem.Infrastructure --startup-project src/CallTrackingSystem.Web
+
+# 套用 Migration
+dotnet ef database update --project src/CallTrackingSystem.Infrastructure --startup-project src/CallTrackingSystem.Web
 ```
-CallTrackingSystem/
-  src/
-    CallTrackingSystem.Web/           # MVC + API + DI
-    CallTrackingSystem.Core/          # Entities / DTOs / Interfaces / Services
-    CallTrackingSystem.Infrastructure/# EF Core / Repositories / 外部服務
-  tests/
-    CallTrackingSystem.UnitTests/
-    CallTrackingSystem.IntegrationTests/
-```
-
-### 層級規則
-- **Web**：Controllers / Views / API
-- **Core**：Domain Entities + Service + DTO + Interface
-- **Infrastructure**：Repository / EF Core / 外部 API
 
 ---
 
-## ✅ 既定設計決策
+## 5. Project Conventions (STRICT)
 
-- **不使用 AutoMapper**：手動 DTO 映射
-- **不使用 Redis**：SQL Session + DB Lock
-- **Rich Domain Model**：Entity 含業務方法
-- **RowVersion**：EF Core 樂觀鎖定
-- **JWT 認證**：Token 有效期 24h
-- **LINE 通知**：失敗只記錄，不重試
+### Naming Standards
+- Service: `XxxService` + `IXxxService`
+- DTO: `XxxRequest` / `XxxResponse`
+- Controller: `XxxController`
 
----
+### Code Rules
+- **NO AutoMapper**: 手動 DTO 映射
+- **錯誤訊息**: 一律繁體中文，業務例外用 `InvalidOperationException`
+- **日期格式**: UI 為 `yyyy/MM/dd HH:mm`，報表月份為 `yyyy/MM`
+- **時區**: 統一轉換為 Asia/Taipei
 
-## 🧠 開發慣例（重要）
-
-### 1. API/服務命名
-- Service：`XxxService`
-- Interface：`IXxxService`
-- DTO：`XxxRequest` / `XxxResponse`
-- Controller：`XxxController`
-
-### 2. 錯誤訊息
-- **一律繁體中文**
-- 使用 `InvalidOperationException` 為主要業務例外
-
-### 3. 日期格式
-- UI：`yyyy/MM/dd HH:mm`
-- 報表月份：`yyyy/MM`
-
-### 4. 報表限制
-- Excel 匯出最大 5000 筆
-- 三工作表：篩選摘要 / 明細 / 統計
+### Data Constraints
+- Excel 匯出上限: 5000 筆
+- 編輯鎖定逾時: 30 分鐘
 
 ---
 
-## 🧪 測試策略
+## 6. Environment Setup
 
-- 單元測試：Service 層為主
-- 整合測試：Repository + Service 流程
-- 目標覆蓋率：80%（Service 90%+）
+### Development Database
+- **類型**: SQLite
+- **檔案**: `CallTrackingDB_Dev.db` (Web 專案目錄下)
+- **種子資料**: 自動執行 [DbInitializer.cs](CallTrackingSystem/src/CallTrackingSystem.Infrastructure/Data/DbInitializer.cs)
+  - 預設帳號: `admin/Admin@123`, `staff/Staff@123`
 
-測試工具：
-- **xUnit**
-- **Moq**
-- **FluentAssertions**
-
----
-
-## 🧱 常用模組位置
-
-| 模組 | 位置 |
-|------|------|
-| Entities | src/CallTrackingSystem.Core/Entities |
-| DTOs | src/CallTrackingSystem.Core/DTOs |
-| Services | src/CallTrackingSystem.Core/Services |
-| Repositories | src/CallTrackingSystem.Infrastructure/Repositories |
-| Web API | src/CallTrackingSystem.Web/Controllers |
-| Views | src/CallTrackingSystem.Web/Views |
-| Tests | tests/CallTrackingSystem.* |
+### Authentication
+- **策略**: Cookie + JWT 雙通道
+- **切換邏輯**: 依 `Authorization: Bearer` Header 自動選擇
+- **實作位置**: [Program.cs](CallTrackingSystem/src/CallTrackingSystem.Web/Program.cs) 認證設定區段
 
 ---
 
-## 🧩 Edit Lock 機制規範
+## 7. Forbidden Behaviors
 
-- 取得鎖定：`POST /api/call-records/{id}/lock`
-- 釋放鎖定：`DELETE /api/call-records/{id}/lock`
-- 強制解鎖：`POST /api/admin/call-records/{id}/force-unlock`
-- 鎖定過期：30 分鐘
-- 背景清理：每 5 分鐘
-
----
-
-## 🧷 Commit 規範
-
-格式：`feat(US-00X): 任務描述`
-或：`test(T0xx): 任務描述`
+- Do NOT modify existing features without explicit spec approval
+- Do NOT introduce cross-feature dependencies without declaring in spec
+- Do NOT create system-wide architectural changes
+- Do NOT bypass DTO mapping with reflection or dynamic typing
+- Do NOT use English for user-facing error messages
 
 ---
 
-## 🤖 Copilot 行為建議
+## 8. Change Implementation Strategy
 
-- 修改前先查找現有同功能的 Service / Controller
-- 保留現有風格與錯誤訊息
-- 新增功能需同步更新測試
-- 每個 Task 完成後需提交
-- 不建立額外說明文件（除非需求）
+**Before modifying code:**
+1. 檢查是否有對應的 Service/Repository（例: [CallRecordService.cs](CallTrackingSystem/src/CallTrackingSystem.Core/Services/CallRecordService.cs)）
+2. 遵循現有分層結構（Service → Repository → Entity）
+3. 參考相同層級的既有實作範例
+4. 同步更新單元測試 (`tests/CallTrackingSystem.UnitTests`)
 
----
-
-## 📌 參考文件
-
-- [specs/1-customer-call-tracking/spec.md](../specs/1-customer-call-tracking/spec.md)
-- [specs/1-customer-call-tracking/tasks.md](../specs/1-customer-call-tracking/tasks.md)
-- [specs/1-customer-call-tracking/data-model.md](../specs/1-customer-call-tracking/data-model.md)
-- [specs/1-customer-call-tracking/contracts](../specs/1-customer-call-tracking/contracts)
+**Controller 範例**: [CallTrackingSystem.Web/Controllers](CallTrackingSystem/src/CallTrackingSystem.Web/Controllers)
