@@ -30,6 +30,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.LineUserId)
             .HasMaxLength(100);
         
+        builder.Property(x => x.LineDisplayName)
+            .HasMaxLength(100);
+        
+        builder.Property(x => x.LineBoundAt);
+        
         builder.Property(x => x.IsActive)
             .IsRequired();
         

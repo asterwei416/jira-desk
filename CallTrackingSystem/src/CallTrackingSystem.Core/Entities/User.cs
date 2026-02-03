@@ -38,6 +38,16 @@ public class User
     public string? LineUserId { get; set; }
     
     /// <summary>
+    /// LINE Display Name（LINE 帳號顯示名稱）
+    /// </summary>
+    public string? LineDisplayName { get; set; }
+    
+    /// <summary>
+    /// LINE 綁定時間戳記
+    /// </summary>
+    public DateTime? LineBoundAt { get; set; }
+    
+    /// <summary>
     /// 是否啟用
     /// </summary>
     public bool IsActive { get; private set; }
@@ -82,17 +92,21 @@ public class User
         Role = role;
     }
     
-    public void BindLineAccount(string lineUserId)
+    public void BindLineAccount(string lineUserId, string? lineDisplayName = null)
     {
         if (string.IsNullOrWhiteSpace(lineUserId))
             throw new ArgumentException("LINE User ID 不可為空", nameof(lineUserId));
         
         LineUserId = lineUserId.Trim();
+        LineDisplayName = lineDisplayName?.Trim();
+        LineBoundAt = DateTime.UtcNow;
     }
 
     public void UnbindLineAccount()
     {
         LineUserId = null;
+        LineDisplayName = null;
+        LineBoundAt = null;
     }
     
     public void ChangePassword(string newPasswordHash)
